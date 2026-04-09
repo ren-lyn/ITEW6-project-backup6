@@ -23,4 +23,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Faculty::class);
     }
+
+    public function documentSubmissions()
+    {
+        return $this->hasMany(DocumentSubmission::class);
+    }
 }

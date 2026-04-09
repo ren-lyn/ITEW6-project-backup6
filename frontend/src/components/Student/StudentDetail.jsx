@@ -10,6 +10,11 @@ const StudentDetail = ({ studentId, onBack }) => {
     const [editModeAcademic, setEditModeAcademic] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
     const [editData, setEditData] = useState({});
+    
+    // Document review states
+    const [actionLoadingDoc, setActionLoadingDoc] = useState(null);
+    const [rejectDocData, setRejectDocData] = useState(null);
+    const [rejectRemarks, setRejectRemarks] = useState('');
 
     // Helper to format proper image url
     const getProfileImageUrl = () => {
@@ -102,6 +107,38 @@ const StudentDetail = ({ studentId, onBack }) => {
         }
     };
 
+    const handleApproveDoc = async (id) => {
+        if (!window.confirm('Are you sure you want to approve this document submission?')) return;
+        setActionLoadingDoc(id);
+        try {
+            await api.post(`/admin/verifications/doc_${id}/approve`);
+            fetchStudent(); // Refresh data
+        } catch (error) {
+            console.error('Error approving document:', error);
+            alert('Failed to approve document.');
+        } finally {
+            setActionLoadingDoc(null);
+        }
+    };
+
+    const handleRejectDoc = async (e) => {
+        e.preventDefault();
+        if (!rejectRemarks.trim()) return;
+        
+        setActionLoadingDoc(rejectDocData.id);
+        try {
+            await api.post(`/admin/verifications/doc_${rejectDocData.id}/reject`, { remarks: rejectRemarks });
+            setRejectDocData(null);
+            setRejectRemarks('');
+            fetchStudent();
+        } catch (error) {
+            console.error('Error rejecting document:', error);
+            alert('Failed to reject document.');
+        } finally {
+            setActionLoadingDoc(null);
+        }
+    };
+
     if (loading) return <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>;
     if (!student) return <div className="alert alert-danger">Student not found.</div>;
 
@@ -189,7 +226,11 @@ const StudentDetail = ({ studentId, onBack }) => {
                                     { id: 'non-academic', label: '3. Non-Academic', icon: 'bi-trophy' },
                                     { id: 'violations', label: '4. Violations', icon: 'bi-exclamation-octagon' },
                                     { id: 'skills', label: '5. Skills', icon: 'bi-lightning' },
-                                    { id: 'affiliations', label: '6. Affiliations', icon: 'bi-people' }
+                                    { id: 'affiliations', label: '6. Affiliations', icon: 'bi-people' },
+                                    { id: 'physical', label: '7. Physical', icon: 'bi-body-text' },
+                                    { id: 'medical', label: '8. Medical', icon: 'bi-heart-pulse' },
+                                    { id: 'behavioral', label: '9. Behavioral', icon: 'bi-chat-dots' },
+                                    { id: 'documents', label: '10. Documents', icon: 'bi-file-earmark-check' }
                                 ].map(tab => (
                                     <li className="nav-item" key={tab.id}>
                                         <button
@@ -572,6 +613,247 @@ const StudentDetail = ({ studentId, onBack }) => {
                                             <div className="col-12 text-center py-5 text-muted">No organizational affiliations listed.</div>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'physical' && (
+                                <div className="fade-in">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-body-text text-primary me-2"></i> Physical Profiling Matrix</h5>
+                                    <div className="row g-4">
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Height</div>
+                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.height || '---'}</h3>
+                                                <div className="small text-muted">cm</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Weight</div>
+                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.weight || '---'}</h3>
+                                                <div className="small text-muted">kg</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-primary bg-opacity-10 border-primary border-opacity-20 text-center">
+                                                <div className="small text-primary mb-1 text-uppercase fw-bold">BMI Index</div>
+                                                <h3 className="fw-bold mb-0 text-primary">{student.physical_profile?.bmi || '---'}</h3>
+                                                <div className="small text-primary">{student.physical_profile?.bmi < 18.5 ? 'Underweight' : (student.physical_profile?.bmi < 25 ? 'Normal' : 'Overweight')}</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Body Type</div>
+                                                <h5 className="fw-bold mb-0 text-dark">{student.physical_profile?.body_measurements || 'Standard'}</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-4 rounded-4 border bg-white shadow-none">
+                                        <h6 className="fw-bold mb-3 border-bottom pb-2">Institutional Identification Image Status</h6>
+                                        <div className="d-flex align-items-center gap-3">
+                                            <div className={`p-2 rounded-circle ${student.physical_profile?.image_presence ? 'bg-success' : 'bg-danger'} bg-opacity-10 text-${student.physical_profile?.image_presence ? 'success' : 'danger'}`}>
+                                                <i className={`bi ${student.physical_profile?.image_presence ? 'bi-check-circle' : 'bi-x-circle'} fs-3`}></i>
+                                            </div>
+                                            <div>
+                                                <div className="fw-bold">{student.physical_profile?.image_presence ? 'Official Snapshot Captured' : 'Official Image Missing'}</div>
+                                                <div className="small text-muted">Required for building the digital university credential.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'medical' && (
+                                <div className="fade-in">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-heart-pulse-fill text-danger me-2"></i> Medical Clearance & Health Status</h5>
+                                    <div className="row g-4 mb-4">
+                                        <div className="col-md-6">
+                                            <div className="p-4 rounded-4 border bg-light h-100">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-muted border-bottom pb-2">Clinical vitals</h6>
+                                                <div className="row">
+                                                    <div className="col-6 mb-3">
+                                                        <label className="d-block small text-muted">Blood Type</label>
+                                                        <span className="fw-bold fs-5 text-danger">{student.medical_records?.[0]?.blood_type || 'Unknown'}</span>
+                                                    </div>
+                                                    <div className="col-6 mb-3">
+                                                        <label className="d-block small text-muted">PWD/Disability</label>
+                                                        <span className="fw-bold">{student.medical_records?.[0]?.disability || 'None'}</span>
+                                                    </div>
+                                                    <div className="col-12">
+                                                        <label className="d-block small text-muted">Allergies</label>
+                                                        <span className="fw-bold text-dark">{student.medical_records?.[0]?.allergies || 'No known allergies'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="p-4 rounded-4 border border-danger border-opacity-25 bg-danger bg-opacity-10 h-100">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-danger border-bottom border-danger border-opacity-20 pb-2">Emergency protocol</h6>
+                                                <div className="mb-3">
+                                                    <label className="d-block small text-danger text-opacity-75">Primary Contact Person</label>
+                                                    <span className="fw-bold text-danger">{student.medical_records?.[0]?.emergency_name || student.guardians?.father_name || 'Not Assigned'}</span>
+                                                </div>
+                                                <div>
+                                                    <label className="d-block small text-danger text-opacity-75">Emergency Number</label>
+                                                    <span className="fw-bold text-danger fs-5">{student.medical_records?.[0]?.emergency_contact || student.guardians?.guardian_contact || 'None'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 rounded-4 border bg-light">
+                                        <h6 className="fw-bold mb-2">Medical History & Chronic Conditions</h6>
+                                        <p className="text-muted small mb-0">{student.medical_records?.[0]?.chronic_illness || 'Records show no persistent chronic complications or reported long-term illnesses requiring institutional monitoring.'}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'behavioral' && (
+                                <div className="fade-in">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-chat-dots-fill text-warning me-2"></i> Behavioral Profile & Guidance Monitoring</h5>
+                                    
+                                    <div className="row g-4 mb-4">
+                                        <div className="col-md-4">
+                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
+                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-success rounded-circle" style={{ width: '80px', height: '80px' }}>
+                                                    <span className="fw-bold text-success fs-5">{student.behavioral_profile?.attendance_percentage || '100'}%</span>
+                                                </div>
+                                                <div className="small text-muted fw-bold text-uppercase">Attendance Rate</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
+                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-primary rounded-circle" style={{ width: '80px', height: '80px' }}>
+                                                    <span className="fw-bold text-primary fs-5">{student.behavioral_profile?.punctuality_rating || '5.0'}</span>
+                                                </div>
+                                                <div className="small text-muted fw-bold text-uppercase">Punctuality Score</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
+                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-info rounded-circle" style={{ width: '80px', height: '80px' }}>
+                                                    <span className="fw-bold text-info fs-5">{student.behavioral_profile?.overall_rating || 'Good'}</span>
+                                                </div>
+                                                <div className="small text-muted fw-bold text-uppercase">Peer Evaluation</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="card border-0 rounded-4 overflow-hidden shadow-none border">
+                                         <div className="card-header bg-light py-3">
+                                             <h6 className="fw-bold mb-0 text-dark">Psychological & Personality Traits</h6>
+                                         </div>
+                                         <div className="card-body p-4">
+                                             <div className="row mb-4">
+                                                 <div className="col-6 mb-3">
+                                                     <label className="d-block small text-muted text-uppercase fw-bold mb-1">Personality Type</label>
+                                                     <span className="badge bg-secondary rounded-pill px-3 py-2">{student.behavioral_profile?.personality_type || 'Ambivert'}</span>
+                                                 </div>
+                                                 <div className="col-6 mb-3">
+                                                     <label className="d-block small text-muted text-uppercase fw-bold mb-1">Communication Rating</label>
+                                                     <div className="d-flex text-warning">
+                                                         {[1,2,3,4,5].map(s => <i key={s} className="bi bi-star-fill me-1"></i>)}
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                             <label className="d-block small text-muted text-uppercase fw-bold mb-2">Guidance Counselor Remarks</label>
+                                             <div className="p-3 rounded-3 bg-light border-start border-4 border-primary italic">
+                                                 "{student.behavioral_profile?.behavioral_remarks || 'Student demonstrates stable emotional intelligence and adaptive social skills within the campus environment.'}"
+                                             </div>
+                                         </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'documents' && (
+                                <div className="fade-in">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-file-earmark-check-fill text-primary me-2"></i> Document Verification Queue</h5>
+                                    
+                                    <div className="alert alert-info border-0 rounded-4 mb-4 small">
+                                        <i className="bi bi-info-circle me-2"></i> These documents are uploaded by the student for institutional verification. Review them carefully before approval.
+                                    </div>
+
+                                    <div className="table-responsive bg-white rounded-4 border overflow-hidden">
+                                        <table className="table table-hover align-middle border-0 mb-0">
+                                            <thead className="bg-light">
+                                                <tr className="small text-uppercase text-muted fw-bold">
+                                                    <th className="ps-4 border-0">Document Type</th>
+                                                    <th className="border-0">Status</th>
+                                                    <th className="border-0">Last Submitted</th>
+                                                    <th className="border-0 text-end pe-4">Institutional Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {student.user?.document_submissions?.map(doc => (
+                                                    <tr key={doc.id}>
+                                                        <td className="ps-4">
+                                                            <div className="fw-bold text-dark">{doc.type?.name || 'Requirement'}</div>
+                                                            <a href={`${api.defaults.baseURL.replace('/api', '')}/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="small text-decoration-none">
+                                                                <i className="bi bi-file-earmark-pdf me-1"></i> Open Document File
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`badge rounded-pill px-3 py-2 ${
+                                                                doc.status === 'approved' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 
+                                                                (doc.status === 'pending' ? 'bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50' : 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25')
+                                                            }`}>
+                                                                {doc.status.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="small text-muted">
+                                                            {new Date(doc.updated_at).toLocaleDateString()}
+                                                        </td>
+                                                        <td className="text-end pe-4">
+                                                            <div className="d-flex gap-2 justify-content-end">
+                                                                <button 
+                                                                    className="btn btn-sm btn-success rounded-pill px-3 shadow-none border-0" 
+                                                                    disabled={doc.status === 'approved' || actionLoadingDoc === doc.id}
+                                                                    onClick={() => handleApproveDoc(doc.id)}
+                                                                >
+                                                                    {actionLoadingDoc === doc.id ? <span className="spinner-border spinner-border-sm"></span> : 'Approve'}
+                                                                </button>
+                                                                <button 
+                                                                    className="btn btn-sm btn-outline-danger rounded-pill px-3 border-0"
+                                                                    disabled={doc.status === 'rejected' || actionLoadingDoc === doc.id}
+                                                                    onClick={() => setRejectDocData(doc)}
+                                                                >
+                                                                    Reject
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {(!student.user?.document_submissions || student.user.document_submissions.length === 0) && (
+                                                    <tr>
+                                                        <td colSpan="4" className="text-center py-5 text-muted">
+                                                            <i className="bi bi-journal-x display-4 d-block mb-3 opacity-25"></i>
+                                                            No document submissions found for this profile.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Sub-modal/Inline rejection for documents */}
+                                    {rejectDocData && (
+                                        <div className="mt-4 p-4 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-25 fade-in">
+                                            <h6 className="fw-bold text-danger mb-3">Rejection Remarks for {rejectDocData.type?.name}</h6>
+                                            <form onSubmit={handleRejectDoc}>
+                                                <textarea 
+                                                    className="form-control border-0 shadow-sm rounded-4 mb-3" 
+                                                    rows="3" 
+                                                    placeholder="Reason for rejection (e.g. Blurry image, Wrong document)..."
+                                                    value={rejectRemarks}
+                                                    onChange={e => setRejectRemarks(e.target.value)}
+                                                    required
+                                                ></textarea>
+                                                <div className="d-flex gap-2">
+                                                    <button type="submit" className="btn btn-danger rounded-pill px-4 fw-bold" disabled={actionLoadingDoc === rejectDocData.id}>Submit Rejection</button>
+                                                    <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => { setRejectDocData(null); setRejectRemarks(''); }}>Cancel</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

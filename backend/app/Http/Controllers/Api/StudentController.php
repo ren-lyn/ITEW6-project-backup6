@@ -128,7 +128,11 @@ class StudentController extends Controller
             'achievements', 
             'skills', 
             'organizations', 
-            'participatingEvents'
+            'participatingEvents',
+            'physicalProfile',
+            'medicalRecords',
+            'behavioralProfile',
+            'user.documentSubmissions.type'
         ]));
     }
 

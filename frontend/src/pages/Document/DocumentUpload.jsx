@@ -50,12 +50,12 @@ const DocumentUpload = () => {
 
     if (loading) return <div className="text-center py-5"><div className="spinner-border text-primary" role="status"></div></div>;
 
-    const getStatusBadge = (status) => {
+    const getStatusInfo = (status) => {
         switch (status) {
-            case 'approved': return <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-25">Approved</span>;
-            case 'pending': return <span className="badge bg-warning bg-opacity-10 text-dark rounded-pill px-3 py-2 border border-warning border-opacity-50">Pending</span>;
-            case 'rejected': return <span className="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 border border-danger border-opacity-25">Rejected</span>;
-            default: return <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-2 border border-secondary border-opacity-25">Missing</span>;
+            case 'approved': return { color: 'success', label: 'Approved', icon: 'bi-check-circle-fill' };
+            case 'pending': return { color: 'warning', label: 'Pending Verification', icon: 'bi-hourglass-split' };
+            case 'rejected': return { color: 'danger', label: 'Rejected / Resubmit', icon: 'bi-exclamation-triangle-fill' };
+            default: return { color: 'secondary', label: 'Missing Document', icon: 'bi-file-earmark-plus' };
         }
     };
 
@@ -80,56 +80,60 @@ const DocumentUpload = () => {
                 <h5 className="fw-bold mb-4 text-dark">Required Documents</h5>
 
                 <div className="d-flex flex-column gap-3">
-                    {documents.map((doc) => (
-                        <div key={doc.document_type_id} className="d-flex align-items-center p-3 rounded-4 bg-light border-0 transition-all">
-                            <div className="bg-warning bg-opacity-10 text-warning rounded-3 d-flex align-items-center justify-content-center me-3" style={{ width: '48px', height: '48px', flexShrink: 0 }}>
-                                <i className="bi bi-file-earmark-text fs-4"></i>
-                            </div>
-                            <div className="flex-grow-1">
-                                <h6 className="fw-bold mb-1 text-dark">
-                                    {doc.name}
-                                </h6>
-                                <div className="small text-muted">{doc.description || 'Required for enrollment verification'}</div>
-                                {doc.file_path && (
-                                    <div className="mt-1">
-                                        <a href={doc.file_path} target="_blank" rel="noopener noreferrer" className="small text-decoration-none d-inline-flex align-items-center gap-1">
-                                            <i className="bi bi-box-arrow-up-right"></i> View File
-                                        </a>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="d-flex flex-column align-items-end justify-content-center gap-2" style={{ minWidth: '120px' }}>
-                                {/* Status badge using yellow Pending from mockup instead of default styles */}
-                                <span className="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-medium border border-warning border-opacity-25 w-100 text-center">
-                                    {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-                                </span>
+                    {documents.map((doc) => {
+                        const statusInfo = getStatusInfo(doc.status);
+                        return (
+                            <div key={doc.document_type_id} className="d-flex align-items-center p-4 rounded-4 bg-white border shadow-sm transition-all hover-shadow-lg mb-2">
+                                <div className={`bg-${statusInfo.color} bg-opacity-10 text-${statusInfo.color} rounded-circle d-flex align-items-center justify-content-center me-4`} style={{ width: '56px', height: '56px', flexShrink: 0 }}>
+                                    <i className={`bi ${statusInfo.icon} fs-4`}></i>
+                                </div>
+                                <div className="flex-grow-1">
+                                    <h6 className="fw-bold mb-1 text-dark fs-5">
+                                        {doc.name}
+                                        {doc.is_mandatory && <span className="ms-2 badge bg-danger text-white rounded-pill x-small px-2" style={{ fontSize: '0.6rem', verticalAlign: 'middle' }}>REQUIRED</span>}
+                                    </h6>
+                                    <div className="small text-muted">{doc.description || 'Verification requirement.'}</div>
+                                    {doc.file_path && (
+                                        <div className="mt-2">
+                                            <a href={doc.file_path} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-light border rounded-pill px-3 text-primary fw-bold shadow-none" style={{ fontSize: '0.75rem' }}>
+                                                <i className="bi bi-file-earmark-pdf me-1"></i> View Submitted Record
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="d-flex flex-column align-items-end justify-content-center gap-2" style={{ minWidth: '160px' }}>
+                                    <span className={`badge bg-${statusInfo.color} bg-opacity-10 text-${statusInfo.color} px-3 py-2 rounded-pill fw-bold border border-${statusInfo.color} border-opacity-25 w-100 text-center`}>
+                                        {statusInfo.label}
+                                    </span>
 
-                                <div className="position-relative w-100 mt-1 d-none"> {/* Hidden for aesthetics unless actively replacing, mockup hides buttons */}
-                                    <input
-                                        type="file"
-                                        id={`upload-${doc.document_type_id}`}
-                                        className="d-none"
-                                        accept=".pdf,.jpg,.jpeg,.png"
-                                        onChange={(e) => handleFileUpload(e, doc.document_type_id)}
-                                        disabled={uploadingId === doc.document_type_id}
-                                    />
-                                    <label
-                                        htmlFor={`upload-${doc.document_type_id}`}
-                                        className={`btn btn-sm py-1 rounded-pill fw-bold w-100 ${doc.status === 'approved' ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
-                                        style={{ cursor: uploadingId === doc.document_type_id ? 'not-allowed' : 'pointer' }}
-                                    >
-                                        {uploadingId === doc.document_type_id ? (
-                                            <><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></>
-                                        ) : (
-                                            <>{doc.status === 'missing' ? 'Upload' : 'Replace'}</>
-                                        )}
-                                    </label>
+                                    <div className="position-relative w-100 mt-1">
+                                        <input
+                                            type="file"
+                                            id={`upload-${doc.document_type_id}`}
+                                            className="d-none"
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onChange={(e) => handleFileUpload(e, doc.document_type_id)}
+                                            disabled={uploadingId === doc.document_type_id || doc.status === 'approved'}
+                                        />
+                                        <label
+                                            htmlFor={`upload-${doc.document_type_id}`}
+                                            className={`btn btn-sm py-2 rounded-pill fw-bold w-100 shadow-sm transition-all ${doc.status === 'approved' ? 'btn-light text-muted' : (doc.status === 'missing' ? 'btn-primary' : 'btn-outline-primary')}`}
+                                            style={{ cursor: (uploadingId === doc.document_type_id || doc.status === 'approved') ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            {uploadingId === doc.document_type_id ? (
+                                                <div className="spinner-border spinner-border-sm" role="status"></div>
+                                            ) : (
+                                                <>{doc.status === 'missing' ? 'Upload Now' : (doc.status === 'approved' ? 'Verified' : 'Update File')}</>
+                                            )}
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {documents.length === 0 && (
-                        <div className="text-center text-muted p-5 rounded-4 bg-light border-0">
+                        <div className="text-center text-muted p-5 rounded-4 bg-light bg-opacity-50 border border-dashed">
+                            <i className="bi bi-file-earmark-check display-4 mb-3 d-block text-secondary opacity-25"></i>
                             No documents required at this time.
                         </div>
                     )}
