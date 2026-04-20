@@ -30,6 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/courses', [\App\Http\Controllers\Api\StudentPortalController::class, 'getEnrolledCourses']);
     Route::get('/student/registration-form', [\App\Http\Controllers\Api\StudentPortalController::class, 'getRegistrationData']);
 
+    // Student Comprehensive Profile (My Profile)
+    Route::get('/student/my-profile', [\App\Http\Controllers\Api\StudentProfileController::class, 'getProfile']);
+    Route::post('/student/my-profile/submit', [\App\Http\Controllers\Api\StudentProfileController::class, 'submitProfile']);
+    Route::post('/student/my-profile/draft', [\App\Http\Controllers\Api\StudentProfileController::class, 'saveDraft']);
+    Route::post('/student/my-profile/upload-document', [\App\Http\Controllers\Api\StudentProfileController::class, 'uploadDocument']);
+
     // Document Upload Phase (Students/Faculty)
     Route::get('/documents', [DocumentController::class, 'index']);
     Route::post('/documents', [DocumentController::class, 'upload']);

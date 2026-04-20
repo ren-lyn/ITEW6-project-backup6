@@ -7,10 +7,7 @@ const StudentForm = ({ onSave, onCancel, student = null }) => {
         ...student,
         course: student.academic_records?.[0]?.course || 'BSIT',
         year_level: student.academic_records?.[0]?.year_level || '1',
-        overall_gwa: student.academic_records?.[0]?.gwa || '',
         academic_standing: student.academic_records?.[0]?.academic_standing || 'Regular',
-        skills_json: student.skills?.map(s => s.skill_name) || [],
-        affiliations: student.organizations?.map(o => ({ org_name: o.org_name, position: o.pivot?.position })) || []
     } : {
         first_name: '',
         last_name: '',
@@ -34,17 +31,8 @@ const StudentForm = ({ onSave, onCancel, student = null }) => {
         // Academic
         course: 'BSIT',
         year_level: '1',
-        overall_gwa: '',
         academic_standing: 'Regular',
-
-        // JSON Lists
-        skills_json: [],
-        affiliations: [], // { org_name, position }
     });
-
-    const [skillInput, setSkillInput] = useState('');
-    const [affOrgInput, setAffOrgInput] = useState('');
-    const [affPosInput, setAffPosInput] = useState('');
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -52,30 +40,6 @@ const StudentForm = ({ onSave, onCancel, student = null }) => {
             ...formData,
             [name]: type === 'checkbox' ? checked : value
         });
-    };
-
-    const addSkill = () => {
-        if (skillInput && !formData.skills_json.includes(skillInput)) {
-            setFormData({ ...formData, skills_json: [...formData.skills_json, skillInput] });
-            setSkillInput('');
-        }
-    };
-
-    const addAffiliation = () => {
-        if (affOrgInput && affPosInput) {
-            setFormData({ 
-                ...formData, 
-                affiliations: [...formData.affiliations, { org_name: affOrgInput, position: affPosInput }] 
-            });
-            setAffOrgInput('');
-            setAffPosInput('');
-        }
-    };
-
-    const removeListItem = (field, index) => {
-        const newList = [...formData[field]];
-        newList.splice(index, 1);
-        setFormData({ ...formData, [field]: newList });
     };
 
     const handleSubmit = async (e) => {
@@ -105,8 +69,6 @@ const StudentForm = ({ onSave, onCancel, student = null }) => {
     const tabs = [
         { id: 'personal', label: '1. Personal' },
         { id: 'academic', label: '2. Academic' },
-        { id: 'skills', label: '3. Skills' },
-        { id: 'affiliations', label: '4. Affiliations' }
     ];
 
     return (
@@ -159,56 +121,11 @@ const StudentForm = ({ onSave, onCancel, student = null }) => {
                     <div className="row g-3">
                         <div className="col-md-6"><label className="form-label small fw-bold text-dark">Course / Program</label><select name="course" className="form-select rounded-3 bg-light border-0" value={formData.course} onChange={handleInputChange}><option value="BSCS">BSCS</option><option value="BSIT">BSIT</option><option value="BSIS">BSIS</option></select></div>
                         <div className="col-md-6"><label className="form-label small fw-bold text-dark">Year Level</label><select name="year_level" className="form-select rounded-3 bg-light border-0" value={formData.year_level} onChange={handleInputChange}><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select></div>
-                        <div className="col-md-6"><label className="form-label small fw-bold text-dark">Current GWA</label><input type="number" step="0.01" name="overall_gwa" className="form-control rounded-3 bg-light border-0" value={formData.overall_gwa} onChange={handleInputChange} /></div>
                         <div className="col-md-6"><label className="form-label small fw-bold text-dark">Academic Standing</label><select name="academic_standing" className="form-select rounded-3 bg-light border-0" value={formData.academic_standing} onChange={handleInputChange}><option value="Regular">Regular</option><option value="Irregular">Irregular</option></select></div>
                     </div>
                 )}
 
-                {activeTab === 'skills' && (
-                    <div className="row g-4">
-                        <div className="col-12">
-                            <label className="form-label fw-bold small text-dark">Technical Skills & Talents</label>
-                            <div className="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
-                                <input type="text" className="form-control border-0 px-3" placeholder="e.g. Basketball, Java, Photoshop" value={skillInput} onChange={e => setSkillInput(e.target.value)} />
-                                <button className="btn btn-dark" type="button" onClick={addSkill}>Add Skill</button>
-                            </div>
-                            <div className="d-flex flex-wrap gap-2 min-vh-10 p-3 bg-light rounded-4 border-dashed">
-                                {formData.skills_json.length > 0 ? formData.skills_json.map((s, i) => (
-                                    <span key={i} className="badge bg-white text-primary border px-3 py-2 rounded-pill shadow-sm">
-                                        {s} <i className="bi bi-x-circle ms-1 cursor-pointer text-danger" onClick={() => removeListItem('skills_json', i)}></i>
-                                    </span>
-                                )) : <span className="text-muted small italic">No skills added yet.</span>}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-                {activeTab === 'affiliations' && (
-                    <div className="row g-3">
-                        <div className="col-md-6"><label className="form-label small fw-bold text-dark">Organization / Sport Name</label><input type="text" className="form-control rounded-3 bg-light border-0" placeholder="e.g. CCS Council, Varsity" value={affOrgInput} onChange={e => setAffOrgInput(e.target.value)} /></div>
-                        <div className="col-md-4"><label className="form-label small fw-bold text-dark">Position / Role</label><input type="text" className="form-control rounded-3 bg-light border-0" placeholder="e.g. Member, Captain" value={affPosInput} onChange={e => setAffPosInput(e.target.value)} /></div>
-                        <div className="col-md-2 d-flex align-items-end"><button className="btn btn-primary w-100 rounded-3 shadow-none fw-bold" type="button" onClick={addAffiliation}>Add</button></div>
-                        
-                        <div className="col-12 mt-4">
-                            <h6 className="fw-bold small text-muted text-uppercase mb-3">Current Affiliations</h6>
-                            <div className="table-responsive bg-light rounded-4 border overflow-hidden">
-                                <table className="table table-hover mb-0">
-                                    <thead className="bg-white"><tr><th className="small text-dark">Organization</th><th className="small text-dark">Role</th><th className="text-end px-3 small text-dark">Action</th></tr></thead>
-                                    <tbody>
-                                        {formData.affiliations.map((aff, i) => (
-                                            <tr key={i}>
-                                                <td className="fw-bold small">{aff.org_name}</td>
-                                                <td className="small">{aff.position}</td>
-                                                <td className="text-end px-3"><i className="bi bi-trash text-danger cursor-pointer" onClick={() => removeListItem('affiliations', i)}></i></td>
-                                            </tr>
-                                        ))}
-                                        {formData.affiliations.length === 0 && <tr><td colSpan="3" className="text-center py-4 text-muted small">No affiliations added.</td></tr>}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 <div className="d-flex justify-content-end mt-5 pt-4 border-top gap-3">
                     <button type="button" className="btn btn-outline-secondary rounded-pill px-5 fw-bold" style={{ backgroundColor: '#ffffff', color: '#4a5568', borderColor: '#cbd5e0' }} onClick={onCancel}>Cancel</button>

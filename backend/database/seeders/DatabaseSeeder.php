@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@ccs.edu',
             'password' => Hash::make('password'),
             'role' => 'admin',
+            'status' => 'approved',
             'must_change_password' => false,
         ]);
 
@@ -30,6 +31,11 @@ class DatabaseSeeder extends Seeder
             ScheduleSeeder::class,
             FacilitySeeder::class,
             InstructionalSeeder::class,
+            ComprehensiveProfilingSeeder::class,
+            DashboardStatsSeeder::class,
+            DocumentTypeSeeder::class,
+            PendingAccountsSeeder::class,
+            SkillsAndTalentsSeeder::class
         ]);
     }
 }

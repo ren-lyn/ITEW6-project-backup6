@@ -127,6 +127,7 @@ class StudentController extends Controller
             'violations', 
             'achievements', 
             'skills', 
+            'talents',
             'organizations', 
             'participatingEvents',
             'physicalProfile',

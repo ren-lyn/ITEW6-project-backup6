@@ -41,15 +41,7 @@ const ScheduleList = () => {
         setShowForm(true);
     };
 
-    if (showForm) {
-        return (
-            <ScheduleForm 
-                schedule={scheduleToEdit} 
-                onSave={() => { setShowForm(false); setScheduleToEdit(null); fetchSchedules(); }} 
-                onCancel={() => { setShowForm(false); setScheduleToEdit(null); }} 
-            />
-        );
-    }
+
 
     return (
         <div>
@@ -168,6 +160,14 @@ const ScheduleList = () => {
                         );
                     })}
                 </div>
+            )}
+
+            {showForm && (
+                <ScheduleForm 
+                    schedule={scheduleToEdit} 
+                    onSave={() => { setShowForm(false); setScheduleToEdit(null); fetchSchedules(); }} 
+                    onCancel={() => { setShowForm(false); setScheduleToEdit(null); }} 
+                />
             )}
         </div>
     );

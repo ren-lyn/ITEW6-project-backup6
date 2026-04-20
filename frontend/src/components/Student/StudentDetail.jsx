@@ -221,16 +221,13 @@ const StudentDetail = ({ studentId, onBack }) => {
                         <div className="card-header bg-white border-0 pt-3">
                             <ul className="nav nav-tabs nav-fill border-0 px-2" style={{ gap: '10px' }}>
                                 {[
-                                    { id: 'personal', label: '1. Personal', icon: 'bi-person' },
+                                    { id: 'personal', label: '1. Personal & Physical', icon: 'bi-person' },
                                     { id: 'academic', label: '2. Academic', icon: 'bi-book' },
-                                    { id: 'non-academic', label: '3. Non-Academic', icon: 'bi-trophy' },
-                                    { id: 'violations', label: '4. Violations', icon: 'bi-exclamation-octagon' },
-                                    { id: 'skills', label: '5. Skills', icon: 'bi-lightning' },
-                                    { id: 'affiliations', label: '6. Affiliations', icon: 'bi-people' },
-                                    { id: 'physical', label: '7. Physical', icon: 'bi-body-text' },
-                                    { id: 'medical', label: '8. Medical', icon: 'bi-heart-pulse' },
-                                    { id: 'behavioral', label: '9. Behavioral', icon: 'bi-chat-dots' },
-                                    { id: 'documents', label: '10. Documents', icon: 'bi-file-earmark-check' }
+                                    { id: 'education', label: '3. Education', icon: 'bi-mortarboard' },
+                                    { id: 'non-academic', label: '4. Non-Academic', icon: 'bi-trophy' },
+                                    { id: 'violations', label: '5. Violations', icon: 'bi-exclamation-octagon' },
+                                    { id: 'skills', label: '6. Skills & Talents', icon: 'bi-lightning' },
+                                    { id: 'documents', label: '7. Documents', icon: 'bi-file-earmark-check' }
                                 ].map(tab => (
                                     <li className="nav-item" key={tab.id}>
                                         <button
@@ -355,15 +352,91 @@ const StudentDetail = ({ studentId, onBack }) => {
                                             </div>
 
                                             <h6 className="fw-bold mb-3 mt-5 text-muted small text-uppercase tracking-widest">Family & Guardian Info</h6>
-                                            <div className="p-4 rounded-4 bg-light bg-opacity-50 border">
-                                                <div className="row g-4">
-                                                    <div className="col-md-6"><label className="small text-muted d-block mb-1">Father's Name</label><div className="fw-bold">{student.guardians?.father_name || 'N/A'}</div></div>
-                                                    <div className="col-md-6"><label className="small text-muted d-block mb-1">Mother's Name</label><div className="fw-bold">{student.guardians?.mother_name || 'N/A'}</div></div>
-                                                    <div className="col-12"><label className="small text-muted d-block mb-1">Guardian Contact</label><div className="fw-bold">{student.guardians?.guardian_contact || 'N/A'}</div></div>
+                                            <div className="p-4 rounded-4 bg-light bg-opacity-50 border mb-3">
+                                                <h6 className="fw-bold text-muted small mb-3"><i className="bi bi-person-fill me-1"></i>Father's Information</h6>
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Full Name</label><div className="fw-bold">{student.guardians?.father_name || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Occupation</label><div className="fw-bold">{student.guardians?.father_occupation || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Contact No.</label><div className="fw-bold">{student.guardians?.father_contact || 'N/A'}</div></div>
+                                                </div>
+                                                <hr className="opacity-10" />
+                                                <h6 className="fw-bold text-muted small mb-3"><i className="bi bi-person-fill me-1"></i>Mother's Information</h6>
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Full Name</label><div className="fw-bold">{student.guardians?.mother_name || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Occupation</label><div className="fw-bold">{student.guardians?.mother_occupation || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Contact No.</label><div className="fw-bold">{student.guardians?.mother_contact || 'N/A'}</div></div>
+                                                </div>
+                                                <hr className="opacity-10" />
+                                                <h6 className="fw-bold text-muted small mb-3"><i className="bi bi-shield-fill-check me-1"></i>Guardian & Emergency</h6>
+                                                <div className="row g-3 mb-3">
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Guardian Name</label><div className="fw-bold">{student.guardians?.guardian_name || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Guardian Contact</label><div className="fw-bold">{student.guardians?.guardian_contact || 'N/A'}</div></div>
+                                                    <div className="col-md-4"><label className="small text-muted d-block mb-1">Emergency Contact</label><div className="fw-bold text-danger">{student.guardians?.emergency_contact || 'N/A'}</div></div>
+                                                </div>
+                                                <hr className="opacity-10" />
+                                                <h6 className="fw-bold text-muted small mb-3"><i className="bi bi-house-fill me-1"></i>Household</h6>
+                                                <div className="row g-3">
+                                                    <div className="col-md-6"><label className="small text-muted d-block mb-1">Family Income Bracket</label><div className="fw-bold">{student.guardians?.family_income_bracket || 'N/A'}</div></div>
+                                                    <div className="col-md-6"><label className="small text-muted d-block mb-1">Living Status</label><div className="fw-bold">{student.guardians?.living_status || 'N/A'}</div></div>
                                                 </div>
                                             </div>
                                         </>
                                     )}
+
+                                    <h6 className="fw-bold mb-3 mt-5 text-muted small text-uppercase tracking-widest border-bottom pb-2">Physical Profiling System</h6>
+                                    <div className="row g-4 mb-4">
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Height</div>
+                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.height || '---'}</h3>
+                                                <div className="small text-muted">cm</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Weight</div>
+                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.weight || '---'}</h3>
+                                                <div className="small text-muted">kg</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20 text-center">
+                                                <div className="small text-primary mb-1 text-uppercase fw-bold">BMI Index</div>
+                                                <h3 className="fw-bold mb-0 text-primary">
+                                                    {student.physical_profile?.height && student.physical_profile?.weight 
+                                                        ? (student.physical_profile.weight / ((student.physical_profile.height / 100) ** 2)).toFixed(1) 
+                                                        : '---'}
+                                                </h3>
+                                                <div className="small text-primary">
+                                                    {student.physical_profile?.height && student.physical_profile?.weight ? (() => {
+                                                        const bmi = student.physical_profile.weight / ((student.physical_profile.height / 100) ** 2);
+                                                        if (bmi < 18.5) return 'Underweight';
+                                                        if (bmi < 25) return 'Normal Weight';
+                                                        if (bmi < 30) return 'Overweight';
+                                                        return 'Obese';
+                                                    })() : '---'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-3">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Body Type</div>
+                                                <h5 className="fw-bold mb-0 text-dark">{student.physical_profile?.body_measurements || 'Standard'}</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-4 rounded-4 border bg-white shadow-none">
+                                        <h6 className="fw-bold mb-3 border-bottom pb-2">Institutional Identification Image Status</h6>
+                                        <div className="d-flex align-items-center gap-3">
+                                            <div className={`p-2 rounded-circle ${student.physical_profile?.image_presence ? 'bg-success' : 'bg-danger'} bg-opacity-10 text-${student.physical_profile?.image_presence ? 'success' : 'danger'}`}>
+                                                <i className={`bi ${student.physical_profile?.image_presence ? 'bi-check-circle' : 'bi-x-circle'} fs-3`}></i>
+                                            </div>
+                                            <div>
+                                                <div className="fw-bold">{student.physical_profile?.image_presence ? 'Official Snapshot Captured' : 'Official Image Missing'}</div>
+                                                <div className="small text-muted">Required for building the digital university credential.</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -463,6 +536,50 @@ const StudentDetail = ({ studentId, onBack }) => {
                                             </tbody>
                                         </table>
                                     </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'education' && (
+                                <div className="fade-in">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-mortarboard-fill text-primary me-2"></i> Educational Background</h5>
+                                    <p className="small text-muted mb-4">Pre-college educational history as submitted by the student.</p>
+                                    
+                                    {/* Elementary */}
+                                    <div className="p-4 rounded-4 mb-3" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                                        <h6 className="fw-bold mb-3 d-flex align-items-center gap-2"><i className="bi bi-book text-warning"></i>Elementary School</h6>
+                                        <div className="row g-3">
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">School Name</label><div className="fw-bold">{student.elementary_school || 'Not provided'}</div></div>
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">Year Graduated</label><div className="fw-bold">{student.elementary_year_graduated || 'N/A'}</div></div>
+                                            <div className="col-12"><label className="small text-muted d-block mb-1">Awards / Honors</label><div className="fw-bold">{student.elementary_awards || 'None listed'}</div></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Junior High */}
+                                    <div className="p-4 rounded-4 mb-3" style={{ background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                                        <h6 className="fw-bold mb-3 d-flex align-items-center gap-2"><i className="bi bi-journal-text text-success"></i>Junior High School</h6>
+                                        <div className="row g-3">
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">School Name</label><div className="fw-bold">{student.junior_high_school || 'Not provided'}</div></div>
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">Year Graduated</label><div className="fw-bold">{student.junior_high_year_graduated || 'N/A'}</div></div>
+                                            <div className="col-12"><label className="small text-muted d-block mb-1">Awards / Honors</label><div className="fw-bold">{student.junior_high_awards || 'None listed'}</div></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Senior High */}
+                                    <div className="p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                                        <h6 className="fw-bold mb-3 d-flex align-items-center gap-2"><i className="bi bi-building text-primary"></i>Senior High School</h6>
+                                        <div className="row g-3">
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">School Name</label><div className="fw-bold">{student.senior_high_school || 'Not provided'}</div></div>
+                                            <div className="col-md-6"><label className="small text-muted d-block mb-1">Year Graduated</label><div className="fw-bold">{student.senior_high_year_graduated || 'N/A'}</div></div>
+                                            <div className="col-12"><label className="small text-muted d-block mb-1">Awards / Honors</label><div className="fw-bold">{student.senior_high_awards || 'None listed'}</div></div>
+                                        </div>
+                                    </div>
+
+                                    {!student.elementary_school && !student.junior_high_school && !student.senior_high_school && (
+                                        <div className="text-center text-muted py-5 mt-4 rounded-4 border border-dashed bg-light">
+                                            <i className="bi bi-mortarboard display-4 d-block mb-3 opacity-25"></i>
+                                            Student has not yet submitted their educational background.
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -576,193 +693,47 @@ const StudentDetail = ({ studentId, onBack }) => {
 
                             {activeTab === 'skills' && (
                                 <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-lightning-charge-fill text-primary me-2"></i> Skills & Proficiency</h5>
-                                    <div className="row g-4">
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-lightning-charge-fill text-primary me-2"></i> Skills & Talents</h5>
+                                    <p className="small text-muted mb-4">Skills and talents selected by the student from their profile.</p>
+
+                                    <h6 className="fw-bold mb-3 small text-uppercase text-muted tracking-widest border-bottom pb-2"><i className="bi bi-gear-fill me-1"></i>Skills</h6>
+                                    <div className="d-flex flex-wrap gap-2 mb-5">
                                         {student.skills?.map(sk => (
-                                            <div className="col-md-6" key={sk.id}>
-                                                <div className="p-3 border rounded-4 bg-white shadow-sm d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <div className="fw-bold">{sk.skill_name}</div>
-                                                        <div className="text-muted small">{sk.skill_type || 'General'}</div>
-                                                    </div>
-                                                    <div className="text-primary fw-bold small">{sk.pivot?.proficiency_level || 'N/A'}</div>
-                                                </div>
-                                            </div>
+                                            <span key={sk.skill_id} className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 fw-medium">
+                                                <i className="bi bi-check-circle-fill me-1"></i>{sk.skill_name}
+                                                <span className="ms-2 badge bg-success bg-opacity-25 rounded-pill" style={{ fontSize: '0.6rem' }}>{sk.skill_type || 'General'}</span>
+                                            </span>
                                         ))}
                                         {(!student.skills || student.skills.length === 0) && (
-                                            <div className="col-12 text-center py-5 text-muted">No skills listed for this profile.</div>
+                                            <div className="text-center text-muted py-4 w-100 rounded-4 border border-dashed bg-light">
+                                                <i className="bi bi-lightning display-6 d-block mb-2 opacity-25"></i>
+                                                No skills selected by the student.
+                                            </div>
                                         )}
                                     </div>
-                                </div>
-                            )}
 
-                            {activeTab === 'affiliations' && (
-                                <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-people-fill text-primary me-2"></i> Organizational Affiliations</h5>
-                                    <div className="row g-4">
-                                        {student.organizations?.map(org => (
-                                            <div className="col-md-6" key={org.id}>
-                                                <div className="p-4 rounded-4 bg-white border shadow-sm">
-                                                    <h5 className="fw-bold mb-1">{org.org_name}</h5>
-                                                    <div className="badge bg-light text-primary border mb-3">{org.pivot?.position || 'Member'}</div>
-                                                    <div className="small text-muted"><i className="bi bi-calendar-event me-2"></i> Active: {org.pivot?.years_active || 'N/A'}</div>
-                                                </div>
-                                            </div>
+                                    <h6 className="fw-bold mb-3 small text-uppercase text-muted tracking-widest border-bottom pb-2"><i className="bi bi-star-fill me-1"></i>Talents</h6>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {student.talents?.map(t => (
+                                            <span key={t.talent_id} className="badge bg-opacity-10 text-white border rounded-pill px-3 py-2 fw-medium" style={{ backgroundColor: '#8b5cf6', borderColor: '#8b5cf6' }}>
+                                                <i className="bi bi-check-circle-fill me-1"></i>{t.talent_name}
+                                            </span>
                                         ))}
-                                        {(!student.organizations || student.organizations.length === 0) && (
-                                            <div className="col-12 text-center py-5 text-muted">No organizational affiliations listed.</div>
+                                        {(!student.talents || student.talents.length === 0) && (
+                                            <div className="text-center text-muted py-4 w-100 rounded-4 border border-dashed bg-light">
+                                                <i className="bi bi-star display-6 d-block mb-2 opacity-25"></i>
+                                                No talents selected by the student.
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             )}
 
-                            {activeTab === 'physical' && (
-                                <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-body-text text-primary me-2"></i> Physical Profiling Matrix</h5>
-                                    <div className="row g-4">
-                                        <div className="col-md-3">
-                                            <div className="p-4 rounded-4 bg-light border text-center">
-                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Height</div>
-                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.height || '---'}</h3>
-                                                <div className="small text-muted">cm</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-3">
-                                            <div className="p-4 rounded-4 bg-light border text-center">
-                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Weight</div>
-                                                <h3 className="fw-bold mb-0 text-dark">{student.physical_profile?.weight || '---'}</h3>
-                                                <div className="small text-muted">kg</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-3">
-                                            <div className="p-4 rounded-4 bg-primary bg-opacity-10 border-primary border-opacity-20 text-center">
-                                                <div className="small text-primary mb-1 text-uppercase fw-bold">BMI Index</div>
-                                                <h3 className="fw-bold mb-0 text-primary">{student.physical_profile?.bmi || '---'}</h3>
-                                                <div className="small text-primary">{student.physical_profile?.bmi < 18.5 ? 'Underweight' : (student.physical_profile?.bmi < 25 ? 'Normal' : 'Overweight')}</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-3">
-                                            <div className="p-4 rounded-4 bg-light border text-center">
-                                                <div className="small text-muted mb-1 text-uppercase fw-bold">Body Type</div>
-                                                <h5 className="fw-bold mb-0 text-dark">{student.physical_profile?.body_measurements || 'Standard'}</h5>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 p-4 rounded-4 border bg-white shadow-none">
-                                        <h6 className="fw-bold mb-3 border-bottom pb-2">Institutional Identification Image Status</h6>
-                                        <div className="d-flex align-items-center gap-3">
-                                            <div className={`p-2 rounded-circle ${student.physical_profile?.image_presence ? 'bg-success' : 'bg-danger'} bg-opacity-10 text-${student.physical_profile?.image_presence ? 'success' : 'danger'}`}>
-                                                <i className={`bi ${student.physical_profile?.image_presence ? 'bi-check-circle' : 'bi-x-circle'} fs-3`}></i>
-                                            </div>
-                                            <div>
-                                                <div className="fw-bold">{student.physical_profile?.image_presence ? 'Official Snapshot Captured' : 'Official Image Missing'}</div>
-                                                <div className="small text-muted">Required for building the digital university credential.</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            {activeTab === 'medical' && (
-                                <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-heart-pulse-fill text-danger me-2"></i> Medical Clearance & Health Status</h5>
-                                    <div className="row g-4 mb-4">
-                                        <div className="col-md-6">
-                                            <div className="p-4 rounded-4 border bg-light h-100">
-                                                <h6 className="fw-bold mb-3 small text-uppercase text-muted border-bottom pb-2">Clinical vitals</h6>
-                                                <div className="row">
-                                                    <div className="col-6 mb-3">
-                                                        <label className="d-block small text-muted">Blood Type</label>
-                                                        <span className="fw-bold fs-5 text-danger">{student.medical_records?.[0]?.blood_type || 'Unknown'}</span>
-                                                    </div>
-                                                    <div className="col-6 mb-3">
-                                                        <label className="d-block small text-muted">PWD/Disability</label>
-                                                        <span className="fw-bold">{student.medical_records?.[0]?.disability || 'None'}</span>
-                                                    </div>
-                                                    <div className="col-12">
-                                                        <label className="d-block small text-muted">Allergies</label>
-                                                        <span className="fw-bold text-dark">{student.medical_records?.[0]?.allergies || 'No known allergies'}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-6">
-                                            <div className="p-4 rounded-4 border border-danger border-opacity-25 bg-danger bg-opacity-10 h-100">
-                                                <h6 className="fw-bold mb-3 small text-uppercase text-danger border-bottom border-danger border-opacity-20 pb-2">Emergency protocol</h6>
-                                                <div className="mb-3">
-                                                    <label className="d-block small text-danger text-opacity-75">Primary Contact Person</label>
-                                                    <span className="fw-bold text-danger">{student.medical_records?.[0]?.emergency_name || student.guardians?.father_name || 'Not Assigned'}</span>
-                                                </div>
-                                                <div>
-                                                    <label className="d-block small text-danger text-opacity-75">Emergency Number</label>
-                                                    <span className="fw-bold text-danger fs-5">{student.medical_records?.[0]?.emergency_contact || student.guardians?.guardian_contact || 'None'}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-4 rounded-4 border bg-light">
-                                        <h6 className="fw-bold mb-2">Medical History & Chronic Conditions</h6>
-                                        <p className="text-muted small mb-0">{student.medical_records?.[0]?.chronic_illness || 'Records show no persistent chronic complications or reported long-term illnesses requiring institutional monitoring.'}</p>
-                                    </div>
-                                </div>
-                            )}
 
-                            {activeTab === 'behavioral' && (
-                                <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-chat-dots-fill text-warning me-2"></i> Behavioral Profile & Guidance Monitoring</h5>
-                                    
-                                    <div className="row g-4 mb-4">
-                                        <div className="col-md-4">
-                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
-                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-success rounded-circle" style={{ width: '80px', height: '80px' }}>
-                                                    <span className="fw-bold text-success fs-5">{student.behavioral_profile?.attendance_percentage || '100'}%</span>
-                                                </div>
-                                                <div className="small text-muted fw-bold text-uppercase">Attendance Rate</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-4">
-                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
-                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-primary rounded-circle" style={{ width: '80px', height: '80px' }}>
-                                                    <span className="fw-bold text-primary fs-5">{student.behavioral_profile?.punctuality_rating || '5.0'}</span>
-                                                </div>
-                                                <div className="small text-muted fw-bold text-uppercase">Punctuality Score</div>
-                                            </div>
-                                        </div>
-                                        <div className="col-md-4">
-                                            <div className="p-4 rounded-4 bg-white border shadow-sm text-center">
-                                                <div className="circular-progress mx-auto mb-3 d-flex align-items-center justify-content-center border border-5 border-info rounded-circle" style={{ width: '80px', height: '80px' }}>
-                                                    <span className="fw-bold text-info fs-5">{student.behavioral_profile?.overall_rating || 'Good'}</span>
-                                                </div>
-                                                <div className="small text-muted fw-bold text-uppercase">Peer Evaluation</div>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="card border-0 rounded-4 overflow-hidden shadow-none border">
-                                         <div className="card-header bg-light py-3">
-                                             <h6 className="fw-bold mb-0 text-dark">Psychological & Personality Traits</h6>
-                                         </div>
-                                         <div className="card-body p-4">
-                                             <div className="row mb-4">
-                                                 <div className="col-6 mb-3">
-                                                     <label className="d-block small text-muted text-uppercase fw-bold mb-1">Personality Type</label>
-                                                     <span className="badge bg-secondary rounded-pill px-3 py-2">{student.behavioral_profile?.personality_type || 'Ambivert'}</span>
-                                                 </div>
-                                                 <div className="col-6 mb-3">
-                                                     <label className="d-block small text-muted text-uppercase fw-bold mb-1">Communication Rating</label>
-                                                     <div className="d-flex text-warning">
-                                                         {[1,2,3,4,5].map(s => <i key={s} className="bi bi-star-fill me-1"></i>)}
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                             <label className="d-block small text-muted text-uppercase fw-bold mb-2">Guidance Counselor Remarks</label>
-                                             <div className="p-3 rounded-3 bg-light border-start border-4 border-primary italic">
-                                                 "{student.behavioral_profile?.behavioral_remarks || 'Student demonstrates stable emotional intelligence and adaptive social skills within the campus environment.'}"
-                                             </div>
-                                         </div>
-                                    </div>
-                                </div>
-                            )}
+
+
 
                             {activeTab === 'documents' && (
                                 <div className="fade-in">
@@ -787,9 +758,7 @@ const StudentDetail = ({ studentId, onBack }) => {
                                                     <tr key={doc.id}>
                                                         <td className="ps-4">
                                                             <div className="fw-bold text-dark">{doc.type?.name || 'Requirement'}</div>
-                                                            <a href={`${api.defaults.baseURL.replace('/api', '')}/storage/${doc.file_path}`} target="_blank" rel="noreferrer" className="small text-decoration-none">
-                                                                <i className="bi bi-file-earmark-pdf me-1"></i> Open Document File
-                                                            </a>
+                                                            <div className="small text-muted"><i className="bi bi-file-earmark-pdf me-1"></i> {doc.file_path ? doc.file_path.split('/').pop() : 'Attached File'}</div>
                                                         </td>
                                                         <td>
                                                             <span className={`badge rounded-pill px-3 py-2 ${
@@ -804,6 +773,14 @@ const StudentDetail = ({ studentId, onBack }) => {
                                                         </td>
                                                         <td className="text-end pe-4">
                                                             <div className="d-flex gap-2 justify-content-end">
+                                                                <a 
+                                                                    href={`${api.defaults.baseURL.replace('/api', '')}/storage/${doc.file_path}`} 
+                                                                    target="_blank" 
+                                                                    rel="noreferrer" 
+                                                                    className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                                >
+                                                                    <i className="bi bi-eye me-1"></i> Show
+                                                                </a>
                                                                 <button 
                                                                     className="btn btn-sm btn-success rounded-pill px-3 shadow-none border-0" 
                                                                     disabled={doc.status === 'approved' || actionLoadingDoc === doc.id}

@@ -126,7 +126,7 @@ const Layout = ({ children }) => {
             </nav>
             <div className="container-fluid flex-grow-1">
                 <div className="row flex-nowrap h-100">
-                    <nav className="col-md-2 d-none d-md-block sidebar py-4 sticky-top shadow-sm" style={{ backgroundColor: '#1a1a1a', top: '75px', height: 'calc(100vh - 75px)', zIndex: 1030 }}>
+                    <nav className="col-md-3 d-none d-md-block sidebar py-4 sticky-top shadow-sm" style={{ backgroundColor: '#1a1a1a', top: '75px', height: 'calc(100vh - 75px)', zIndex: 1030, overflowY: 'auto' }}>
                         <div className="sidebar-sticky h-100 d-flex flex-column">
                             {/* Top part of sidebar removed logo */}
                             <ul className="nav flex-column px-3 flex-grow-1 mt-2">
@@ -201,12 +201,12 @@ const Layout = ({ children }) => {
                                 )}
                                 <div className="overflow-hidden">
                                     <div className="fw-bold text-white text-truncate">{user?.name || 'Guest User'}</div>
-                                    <div className="text-muted small text-capitalize">{user?.role || 'Guest'}</div>
+                                    <div className="small text-capitalize" style={{ color: '#9ca3af' }}>{user?.role || 'Guest'}</div>
                                 </div>
                             </div>
                         </div>
                     </nav>
-                    <main role="main" className="col-md-10 ms-sm-auto px-md-5 py-5 overflow-auto" style={{ backgroundColor: 'var(--ccs-bg-light)', minHeight: 'calc(100vh - 64px)' }}>
+                    <main role="main" className="col-md-9 ms-sm-auto px-md-5 py-5 overflow-auto" style={{ backgroundColor: 'var(--ccs-bg-light)', minHeight: 'calc(100vh - 64px)' }}>
                         {children}
                     </main>
                 </div>

@@ -78,6 +78,23 @@ body {
   background-color: var(--ccs-primary) !important;
 }
 
+/* Fix for opacity utilities being overridden by the solid primary background */
+.bg-primary.bg-opacity-10, .badge.bg-primary.bg-opacity-10 {
+  background-color: rgba(243, 112, 33, 0.1) !important;
+}
+
+.bg-primary.bg-opacity-25, .badge.bg-primary.bg-opacity-25 {
+  background-color: rgba(243, 112, 33, 0.25) !important;
+}
+
+.border-primary {
+  border-color: var(--ccs-primary) !important;
+}
+
+.border-primary.border-opacity-25 {
+  border-color: rgba(243, 112, 33, 0.25) !important;
+}
+
 /* Animations */
 
 /* Fade in up */

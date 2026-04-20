@@ -7,10 +7,10 @@ const ScheduleForm = ({ schedule, onSave, onCancel }) => {
         title: '',
         subject_code: '',
         section: '',
-        year_level: '',
+        year_level: '1',
         faculty_id: '',
         event_id: '',
-        days_of_week: '',
+        days_of_week: 'Monday',
         start_time: '',
         end_time: '',
         room_assignment: ''
@@ -50,108 +50,135 @@ const ScheduleForm = ({ schedule, onSave, onCancel }) => {
             if (onSave) onSave();
         } catch (error) {
             console.error("Error saving schedule:", error);
-            alert("Failed to save schedule. Ensure all required fields are correctly specified.");
+            alert("Failed to save schedule.");
         }
     };
 
     return (
-        <div className="card border-0 shadow-lg rounded-4 overflow-hidden fade-in">
-            <div className="p-4 bg-primary text-white d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 className="fw-bold mb-0">Resource Scheduling Engine</h4>
-                    <p className="small mb-0 opacity-75 fw-medium">Allocate faculty, venues, and timeframes securely.</p>
-                </div>
-                <div className="bg-white rounded-3 p-2 shadow-sm"><i className="bi bi-calendar3 text-primary fs-4"></i></div>
-            </div>
+        <>
+            {/* Modal Backdrop overlay effect */}
+            <div className="modal-backdrop fade show" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050 }}></div>
 
-            <form onSubmit={handleSubmit} className="p-4" style={{ backgroundColor: '#fdfdfd' }}>
-                <div className="row g-4 mb-4">
-                    <div className="col-md-12">
-                        <label className="form-label small fw-bold text-uppercase tracking-wider">Schedule Type Classification</label>
-                        <select name="schedule_type" className="form-select form-select-lg shadow-sm" value={formData.schedule_type} onChange={handleChange}>
-                            <option value="Class">Academic Class</option>
-                            <option value="Event">College Event</option>
-                            <option value="General Session">General Session</option>
-                        </select>
-                    </div>
+            <div className="modal fade show d-block" tabIndex="-1" style={{ zIndex: 1055 }} aria-hidden="true" role="dialog">
+                <div className="modal-dialog modal-dialog-centered modal-lg border-0 shadow-lg" style={{ maxWidth: '700px' }}>
+                    <div className="modal-content rounded-4 overflow-hidden border-0 shadow" style={{ backgroundColor: '#ecdabd' }}>
 
-                    <div className="col-md-12">
-                        <label className="form-label small fw-bold">Title / Designation</label>
-                        <input type="text" name="title" className="form-control" value={formData.title || ''} onChange={handleChange} required placeholder="e.g. Introduction to Computing" />
-                    </div>
-
-                    {formData.schedule_type === 'Class' && (
-                        <>
-                            <div className="col-md-4">
-                                <label className="form-label small fw-bold">Subject Code</label>
-                                <input type="text" name="subject_code" className="form-control" value={formData.subject_code || ''} onChange={handleChange} placeholder="e.g. ITEW6" />
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label small fw-bold">Section</label>
-                                <input type="text" name="section" className="form-control" value={formData.section || ''} onChange={handleChange} placeholder="e.g. 3A" />
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label small fw-bold">Year Level</label>
-                                <input type="text" name="year_level" className="form-control" value={formData.year_level || ''} onChange={handleChange} placeholder="e.g. 3" />
-                            </div>
-                            <div className="col-md-12 mt-4">
-                                <label className="form-label small fw-bold"><i className="bi bi-person-badge text-primary me-2"></i> Assigned Faculty Member</label>
-                                <select name="faculty_id" className="form-select shadow-sm" value={formData.faculty_id || ''} onChange={handleChange}>
-                                    <option value="">-- Autoselect Instructor via Database Lookup --</option>
-                                    {faculty.map((f) => (
-                                        <option key={f.faculty_id} value={f.faculty_id}>
-                                            {f.user?.first_name} {f.user?.last_name} ({f.department || 'Faculty'})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </>
-                    )}
-
-                    {formData.schedule_type === 'Event' && (
-                        <div className="col-md-12 mt-4">
-                            <label className="form-label small fw-bold"><i className="bi bi-calendar-event text-warning me-2"></i> Link to College Event Database</label>
-                            <select name="event_id" className="form-select shadow-sm" value={formData.event_id || ''} onChange={handleChange}>
-                                <option value="">-- Map to Existing College Event --</option>
-                                {events.map((ev) => (
-                                    <option key={ev.event_id} value={ev.event_id}>
-                                        {ev.name} (Mapped Event ID: {ev.event_code || ev.event_id})
-                                    </option>
-                                ))}
-                            </select>
+                        <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <h5 className="modal-title fw-bold text-dark fs-4" style={{ letterSpacing: '0.5px' }}>ASSIGN FACULTY TO SECTION</h5>
+                            <button type="button" className="btn-close shadow-none" onClick={onCancel} style={{ filter: 'opacity(0.5)' }}></button>
                         </div>
-                    )}
-                </div>
 
-                <h6 className="fw-bold mb-3 border-start border-primary border-4 ps-3 text-dark mt-5">Time & Venue Configuration</h6>
-                <div className="row g-3 p-4 bg-light rounded-4 border shadow-sm">
-                    <div className="col-md-12">
-                        <label className="form-label small fw-bold text-muted">Days of Week Syntax (e.g., MWF, TTh, Sat)</label>
-                        <input type="text" name="days_of_week" className="form-control" value={formData.days_of_week || ''} onChange={handleChange} placeholder="MWF" required />
-                    </div>
-                    <div className="col-md-4 mt-4">
-                        <label className="form-label small fw-bold text-muted">Start Interval</label>
-                        <input type="time" name="start_time" className="form-control" value={formData.start_time || ''} onChange={handleChange} required />
-                    </div>
-                    <div className="col-md-4 mt-4">
-                        <label className="form-label small fw-bold text-muted">End Interval</label>
-                        <input type="time" name="end_time" className="form-control" value={formData.end_time || ''} onChange={handleChange} required />
-                    </div>
-                    <div className="col-md-4 mt-4">
-                        <label className="form-label small fw-bold text-muted">Facility Allocation</label>
-                        <input type="text" name="room_assignment" className="form-control" value={formData.room_assignment || ''} onChange={handleChange} required placeholder="e.g. CCS Lab 1" />
-                    </div>
-                </div>
+                        <form onSubmit={handleSubmit} className="modal-body p-4 pt-3 pb-5">
+                            <div className="row g-3">
+                                
+                                <div className="col-md-6">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Subject / Course</label>
+                                    <div className="d-flex align-items-center form-control border-0 rounded-3 shadow-none bg-light ps-0 pe-2 py-0">
+                                        <select name="subject_code" className="form-select border-0 shadow-none bg-transparent py-2 w-100" value={formData.subject_code || ''} onChange={handleChange} required>
+                                            <option value="">Select Course</option>
+                                            {/* 1st Year */}
+                                            <option value="CCS101">CCS101 - Intro to Computing</option>
+                                            <option value="CCS102">CCS102 - Comp Prog 1</option>
+                                            <option value="CCS103">CCS103 - Comp Prog 2</option>
+                                            <option value="CCS114">CCS114 - Web Tech</option>
+                                            {/* 2nd Year */}
+                                            <option value="CCS105">CCS105 - HCI 1</option>
+                                            <option value="CCS107">CCS107 - DSA</option>
+                                            <option value="ITEW1">ITEW1 - Responsive Web Design</option>
+                                            <option value="CCS108">CCS108 - OOP</option>
+                                            {/* 3rd Year */}
+                                            <option value="CCS109">CCS109 - SAD</option>
+                                            <option value="ITEW3">ITEW3 - Mobile Prog 1</option>
+                                            <option value="ITP108">ITP108 - Capstone 1</option>
+                                            {/* 4th Year */}
+                                            <option value="ITP112">ITP112 - Capstone 2</option>
+                                            <option value="ITP113">ITP113 - IT Practicum</option>
+                                        </select>
+                                    </div>
+                                    <input type="text" name="title" className="form-control form-control-sm border-0 bg-transparent shadow-none px-2 mt-1 small" placeholder="Course Title (Optional)" value={formData.title || ''} onChange={handleChange} />
+                                </div>
+                                
+                                <div className="col-md-6">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Section Name</label>
+                                    <div className="d-flex align-items-center form-control border-0 rounded-3 shadow-none bg-light ps-0 pe-2 py-0">
+                                        <select name="section" className="form-select border-0 shadow-none bg-transparent py-2 w-100" value={formData.section || ''} onChange={handleChange}>
+                                            <option value="">Select Section</option>
+                                            <option value="IT1A">IT1A</option>
+                                            <option value="IT1B">IT1B</option>
+                                            <option value="CS1A">CS1A</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                <div className="d-flex justify-content-end mt-5 pt-4 border-top">
-                    <button type="button" className="btn btn-light rounded-pill px-5 me-3 shadow-sm border" onClick={onCancel}>Cancel Edit</button>
-                    <button type="submit" className="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">
-                        <i className="bi bi-cloud-arrow-up me-2"></i>
-                        {schedule ? 'Update Matrix Parameters' : 'Publish to Roster'}
-                    </button>
+                                <div className="col-md-12 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Assigned Faculty</label>
+                                    <div className="d-flex align-items-center form-control border-0 rounded-3 shadow-none bg-light ps-0 pe-2 py-0">
+                                        <select name="faculty_id" className="form-select border-0 shadow-none bg-transparent py-2 w-100 text-muted" value={formData.faculty_id || ''} onChange={handleChange}>
+                                            <option value="">Select Professor</option>
+                                            {faculty.map((f) => (
+                                                <option key={f.faculty_id} value={f.faculty_id}>
+                                                    {f.user?.first_name} {f.user?.last_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Day</label>
+                                    <div className="d-flex align-items-center form-control border-0 rounded-3 shadow-none bg-light ps-0 pe-2 py-0">
+                                        <select name="days_of_week" className="form-select border-0 shadow-none bg-transparent py-2 w-100 text-muted" value={formData.days_of_week || ''} onChange={handleChange} required>
+                                            <option value="">Select Day</option>
+                                            <option value="Monday">Monday</option>
+                                            <option value="Tuesday">Tuesday</option>
+                                            <option value="Wednesday">Wednesday</option>
+                                            <option value="Thursday">Thursday</option>
+                                            <option value="Friday">Friday</option>
+                                            <option value="Saturday">Saturday</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="col-md-6 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Schedule Type</label>
+                                    <div className="d-flex align-items-center form-control border-0 rounded-3 shadow-none bg-light ps-0 pe-2 py-0">
+                                        <select name="schedule_type" className="form-select border-0 shadow-none bg-transparent py-2 w-100 text-muted" value={formData.schedule_type} onChange={handleChange}>
+                                            <option value="Class">Lecture</option>
+                                            <option value="Laboratory">Laboratory</option>
+                                            <option value="Event">Event</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-4 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Start Time</label>
+                                    <div className="form-control border-0 rounded-3 shadow-none bg-light px-2 py-0">
+                                        <input type="time" name="start_time" className="form-control border-0 bg-transparent shadow-none py-2 px-1 text-muted text-center" value={formData.start_time || ''} onChange={handleChange} required />
+                                    </div>
+                                </div>
+                                <div className="col-md-4 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>End Time</label>
+                                    <div className="form-control border-0 rounded-3 shadow-none bg-light px-2 py-0">
+                                        <input type="time" name="end_time" className="form-control border-0 bg-transparent shadow-none py-2 px-1 text-muted text-center" value={formData.end_time || ''} onChange={handleChange} required />
+                                    </div>
+                                </div>
+                                <div className="col-md-4 mt-4">
+                                    <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.65rem', letterSpacing: '1px', color: '#444' }}>Room</label>
+                                    <div className="form-control border-0 rounded-3 shadow-none bg-light pe-2 ps-3 py-0">
+                                        <input type="text" name="room_assignment" className="form-control border-0 bg-transparent shadow-none py-2 px-0 text-muted" placeholder="Comp Lab 1" value={formData.room_assignment || ''} onChange={handleChange} required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 mb-2">
+                                <button type="submit" className="btn w-100 rounded-3 py-3 fw-bold text-white fs-6 shadow-sm" style={{ backgroundColor: '#e94b15', letterSpacing: '2px', border: 'none' }}>
+                                    GENERATE SCHEDULE
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </>
     );
 };
 
