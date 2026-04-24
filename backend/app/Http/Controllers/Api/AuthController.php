@@ -122,6 +122,7 @@ class AuthController extends Controller
             'father_name' => 'nullable|string',
             'mother_name' => 'nullable|string',
             'guardian_contact' => 'nullable|string',
+            'birthdate' => 'nullable|date',
         ]);
 
         if ($user->role === 'student' && $user->student) {
@@ -148,6 +149,12 @@ class AuthController extends Controller
             $user->faculty->update([
                 'contact_number' => $validated['contact_number'] ?? $user->faculty->contact_number,
                 'address' => $validated['address'] ?? $user->faculty->address,
+                'nickname' => $validated['nickname'] ?? $user->faculty->nickname,
+                'gender' => $validated['gender'] ?? $user->faculty->gender,
+                'birthdate' => $validated['birthdate'] ?? $user->faculty->birthdate,
+                'nationality' => $validated['nationality'] ?? $user->faculty->nationality,
+                'civil_status' => $validated['civil_status'] ?? $user->faculty->civil_status,
+                'religion' => $validated['religion'] ?? $user->faculty->religion,
             ]);
         }
 

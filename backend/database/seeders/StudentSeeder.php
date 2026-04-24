@@ -16,7 +16,8 @@ class StudentSeeder extends Seeder
                     'name' => 'John Doe',
                     'email' => 'john@student.edu',
                     'password' => Hash::make('password'),
-                    'role' => 'student'
+                    'role' => 'student',
+                    'status' => 'approved'
                 ],
                 'student' => [
                     'first_name' => 'John',
@@ -54,7 +55,8 @@ class StudentSeeder extends Seeder
                     'name' => 'Jane Smith',
                     'email' => 'jane@student.edu',
                     'password' => Hash::make('password'),
-                    'role' => 'student'
+                    'role' => 'student',
+                    'status' => 'approved'
                 ],
                 'student' => [
                     'first_name' => 'Jane',

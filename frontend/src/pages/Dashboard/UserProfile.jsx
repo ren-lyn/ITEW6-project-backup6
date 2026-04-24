@@ -8,7 +8,7 @@ const TABS = [
     { key: 'family', label: 'Family Background', icon: 'bi-people-fill' },
     { key: 'education', label: 'Education', icon: 'bi-mortarboard-fill' },
     { key: 'skills', label: 'Skills & Talents', icon: 'bi-lightning-charge-fill' },
-    { key: 'documents', label: 'Documents', icon: 'bi-file-earmark-arrow-up-fill' },
+    { key: 'medical', label: 'Medical History', icon: 'bi-heart-pulse-fill' },
 ];
 
 /* ─────────────────── Helper: Section Card ─────────────────── */
@@ -72,9 +72,10 @@ const UserProfile = () => {
         elementary_school: '', elementary_year_graduated: '', elementary_awards: '',
         junior_high_school: '', junior_high_year_graduated: '', junior_high_awards: '',
         senior_high_school: '', senior_high_year_graduated: '', senior_high_awards: '',
-        height: '', weight: '',
         skill_ids: [], talent_ids: [],
+        blood_type: '', medical_history: '', allergies: '', medications: '',
     });
+    const [emergencySource, setEmergencySource] = useState(''); // 'father', 'mother', 'guardian', or ''
 
     useEffect(() => { fetchProfile(); }, []);
 
@@ -138,6 +139,10 @@ const UserProfile = () => {
                 weight: pp.weight || '',
                 skill_ids: d.student_skill_ids || [],
                 talent_ids: d.student_talent_ids || [],
+                blood_type: s.blood_type || '',
+                medical_history: s.medical_history || '',
+                allergies: s.allergies || '',
+                medications: s.medications || '',
             });
         } catch (err) {
             console.error('Failed to fetch profile', err);
@@ -146,6 +151,19 @@ const UserProfile = () => {
             setLoading(false);
         }
     };
+
+    // Keep emergency contact in sync if source changes
+    useEffect(() => {
+        if (!emergencySource || isLocked) return;
+        let contact = '';
+        if (emergencySource === 'father') contact = form.father_contact;
+        else if (emergencySource === 'mother') contact = form.mother_contact;
+        else if (emergencySource === 'guardian') contact = form.guardian_contact;
+        
+        if (contact && contact !== form.emergency_contact) {
+            setForm(prev => ({ ...prev, emergency_contact: contact }));
+        }
+    }, [form.father_contact, form.mother_contact, form.guardian_contact, emergencySource]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -223,27 +241,6 @@ const UserProfile = () => {
         }
     };
 
-    /* ─── Document Upload (always allowed) ─── */
-    const handleDocUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploadingDoc(true);
-        setMessage({ text: '', type: '' });
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('document_label', docLabel || file.name);
-        try {
-            const res = await api.post('/student/my-profile/upload-document', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setDocuments(prev => [...prev, res.data.document]);
-            setDocLabel('');
-            setMessage({ text: 'Document uploaded successfully!', type: 'success' });
-        } catch (err) {
-            setMessage({ text: err.response?.data?.message || 'Failed to upload document.', type: 'danger' });
-        } finally {
-            setUploadingDoc(false);
-        }
-    };
-
     const getProfileImageUrl = () => {
         if (!user?.profile_picture) return null;
         if (user.profile_picture.startsWith('http')) return user.profile_picture;
@@ -288,7 +285,7 @@ const UserProfile = () => {
                             </div>
                             <h5 className="fw-bold">Submit Profile?</h5>
                             <p className="text-muted small mb-0">
-                                Once submitted, you <strong>cannot edit</strong> your personal information, contact details, family background, educational history, skills, talents, height, or weight. You can still upload additional documents afterward.
+                                Once submitted, you <strong>cannot edit</strong> your personal information, contact details, family background, educational history, skills, talents, height, or weight.
                             </p>
                         </div>
                         <div className="d-flex gap-2">
@@ -367,7 +364,7 @@ const UserProfile = () => {
                     </div>
                     <div>
                         <strong className="text-primary">Profile Locked</strong>
-                        <p className="mb-0 small text-muted">Your profile has been submitted and is now read-only. You can still upload new documents below.</p>
+                        <p className="mb-0 small text-muted">Your profile has been submitted and is now read-only.</p>
                     </div>
                 </div>
             )}
@@ -484,25 +481,57 @@ const UserProfile = () => {
                 {/* FAMILY BACKGROUND */}
                 {activeTab === 'family' && (
                     <SectionCard icon="bi-people-fill" title="Family Background" badge={isLocked && <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3"><i className="bi bi-lock-fill me-1"></i>Locked</span>}>
-                        <h6 className="fw-bold text-muted small mb-3 text-uppercase ls-wider">Father's Information</h6>
+                        <h6 className="fw-bold text-muted small text-uppercase ls-wider mb-3">Father's Information</h6>
                         <div className="row g-3 mb-4">
-                            <Field label="Father's Full Name" name="father_name" value={form.father_name} onChange={handleChange} disabled={isLocked} />
+                            <div className="col-md-6">
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                    <label className="form-label small text-muted mb-0 fw-semibold">Father's Full Name</label>
+                                    {!isLocked && (
+                                        <div className="form-check form-check-inline small mb-0">
+                                            <input className="form-check-input" type="checkbox" id="syncFather" checked={emergencySource === 'father'} onChange={() => setEmergencySource(prev => prev === 'father' ? '' : 'father')} />
+                                            <label className="form-check-label text-muted x-small" htmlFor="syncFather">Set as Emergency Contact</label>
+                                        </div>
+                                    )}
+                                </div>
+                                <input type="text" name="father_name" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} value={form.father_name} onChange={handleChange} disabled={isLocked} />
+                            </div>
                             <Field label="Father's Occupation" name="father_occupation" value={form.father_occupation} onChange={handleChange} disabled={isLocked} />
                             <Field label="Father's Contact Number" name="father_contact" value={form.father_contact} onChange={handleChange} disabled={isLocked} />
                         </div>
                         <hr className="my-3 opacity-10" />
-                        <h6 className="fw-bold text-muted small mb-3 text-uppercase ls-wider">Mother's Information</h6>
+                        <h6 className="fw-bold text-muted small text-uppercase ls-wider mb-3">Mother's Information</h6>
                         <div className="row g-3 mb-4">
-                            <Field label="Mother's Full Name" name="mother_name" value={form.mother_name} onChange={handleChange} disabled={isLocked} />
+                            <div className="col-md-6">
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                    <label className="form-label small text-muted mb-0 fw-semibold">Mother's Full Name</label>
+                                    {!isLocked && (
+                                        <div className="form-check form-check-inline small mb-0">
+                                            <input className="form-check-input" type="checkbox" id="syncMother" checked={emergencySource === 'mother'} onChange={() => setEmergencySource(prev => prev === 'mother' ? '' : 'mother')} />
+                                            <label className="form-check-label text-muted x-small" htmlFor="syncMother">Set as Emergency Contact</label>
+                                        </div>
+                                    )}
+                                </div>
+                                <input type="text" name="mother_name" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} value={form.mother_name} onChange={handleChange} disabled={isLocked} />
+                            </div>
                             <Field label="Mother's Occupation" name="mother_occupation" value={form.mother_occupation} onChange={handleChange} disabled={isLocked} />
                             <Field label="Mother's Contact Number" name="mother_contact" value={form.mother_contact} onChange={handleChange} disabled={isLocked} />
                         </div>
                         <hr className="my-3 opacity-10" />
-                        <h6 className="fw-bold text-muted small mb-3 text-uppercase ls-wider">Guardian & Emergency</h6>
+                        <h6 className="fw-bold text-muted small text-uppercase ls-wider mb-3">Guardian & Emergency</h6>
                         <div className="row g-3 mb-4">
-                            <Field label="Guardian's Name" name="guardian_name" value={form.guardian_name} onChange={handleChange} disabled={isLocked} placeholder="If other than parents" />
+                            <div className="col-md-6">
+                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                    <label className="form-label small text-muted mb-0 fw-semibold">Guardian's Name</label>
+                                    {!isLocked && (
+                                        <div className="form-check form-check-inline small mb-0">
+                                            <input className="form-check-input" type="checkbox" id="syncGuardian" checked={emergencySource === 'guardian'} onChange={() => setEmergencySource(prev => prev === 'guardian' ? '' : 'guardian')} />
+                                            <label className="form-check-label text-muted x-small" htmlFor="syncGuardian">Set as Emergency Contact</label>
+                                        </div>
+                                    )}
+                                </div>
+                                <input type="text" name="guardian_name" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} value={form.guardian_name} onChange={handleChange} disabled={isLocked} placeholder="If other than parents" />
+                            </div>
                             <Field label="Guardian's Contact" name="guardian_contact" value={form.guardian_contact} onChange={handleChange} disabled={isLocked} />
-                            <Field label="Emergency Contact" name="emergency_contact" value={form.emergency_contact} onChange={handleChange} disabled={isLocked} required />
                         </div>
                         <hr className="my-3 opacity-10" />
                         <h6 className="fw-bold text-muted small mb-3 text-uppercase ls-wider">Household Info</h6>
@@ -641,79 +670,48 @@ const UserProfile = () => {
                     </>
                 )}
 
-
-
-                {/* DOCUMENTS (always editable) */}
-                {activeTab === 'documents' && (
-                    <SectionCard icon="bi-file-earmark-arrow-up-fill" title="Document Uploads" badge={<span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3"><i className="bi bi-unlock-fill me-1"></i>Always Available</span>}>
-                        <p className="small text-muted mb-4">
-                            Upload medical records, psychological records, certificates, or any other required documents. 
-                            <strong> You can upload documents anytime</strong>, even after your profile is submitted.
-                        </p>
-
-                        {/* Upload Area */}
-                        <div className="border border-2 border-dashed rounded-4 p-4 text-center mb-4" style={{ borderColor: '#d1d5db', background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)' }}>
-                            <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '56px', height: '56px' }}>
-                                <i className="bi bi-cloud-arrow-up-fill text-primary fs-3"></i>
-                            </div>
-                            <div className="mb-3">
-                                <h6 className="fw-bold mb-1">Upload New Document</h6>
-                                <p className="small text-muted mb-0">PDF, JPG, PNG, DOC, DOCX — Max 10MB</p>
-                            </div>
-                            <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center align-items-center">
-                                <select className="form-select rounded-pill py-2 w-auto" value={docLabel} onChange={e => setDocLabel(e.target.value)} style={{ minWidth: '220px' }}>
-                                    <option value="">Select Document Type</option>
-                                    <option value="Medical Record">Medical Record</option>
-                                    <option value="Psychological Record">Psychological Record</option>
-                                    <option value="Certificate">Certificate</option>
-                                    <option value="Birth Certificate">Birth Certificate</option>
-                                    <option value="Good Moral Certificate">Good Moral Certificate</option>
-                                    <option value="Form 137 / TOR">Form 137 / TOR</option>
-                                    <option value="Other">Other Document</option>
+                {/* MEDICAL HISTORY */}
+                {activeTab === 'medical' && (
+                    <SectionCard icon="bi-heart-pulse-fill" title="Medical History" badge={isLocked && <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3"><i className="bi bi-lock-fill me-1"></i>Locked</span>}>
+                        <p className="small text-muted mb-4">Please provide accurate information about your health history. This information is confidential and will only be used by authorized university personnel.</p>
+                        
+                        <div className="row g-4">
+                            <div className="col-md-4">
+                                <label className="form-label small text-muted mb-1 fw-semibold">Blood Type</label>
+                                <select name="blood_type" className={`form-select rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} value={form.blood_type} onChange={handleChange} disabled={isLocked}>
+                                    <option value="">Unknown</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
                                 </select>
-                                <div className="position-relative">
-                                    <input ref={docInputRef} type="file" className="d-none" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={handleDocUpload} disabled={uploadingDoc} />
-                                    <button className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onClick={() => docInputRef.current?.click()} disabled={uploadingDoc}>
-                                        {uploadingDoc ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-upload me-2"></i>}
-                                        Choose File
-                                    </button>
-                                </div>
+                            </div>
+
+                            <div className="col-12">
+                                <label className="form-label small text-muted mb-1 fw-semibold">Medical History / Past Conditions</label>
+                                <textarea name="medical_history" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} rows="3" value={form.medical_history} onChange={handleChange} disabled={isLocked} placeholder="e.g. Asthma, Hypertension, Diabetes, Past Surgeries..."></textarea>
+                            </div>
+
+                            <div className="col-12">
+                                <label className="form-label small text-muted mb-1 fw-semibold">Allergies</label>
+                                <textarea name="allergies" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} rows="2" value={form.allergies} onChange={handleChange} disabled={isLocked} placeholder="e.g. Food allergies, Drug allergies, Environmental allergies..."></textarea>
+                            </div>
+
+                            <div className="col-12">
+                                <label className="form-label small text-muted mb-1 fw-semibold">Current Medications</label>
+                                <textarea name="medications" className={`form-control rounded-3 py-2 ${isLocked ? 'bg-light' : 'border-primary border-opacity-50'}`} rows="2" value={form.medications} onChange={handleChange} disabled={isLocked} placeholder="List any medications you are currently taking..."></textarea>
                             </div>
                         </div>
-
-                        {/* Uploaded Documents List */}
-                        {documents.length > 0 ? (
-                            <div className="d-flex flex-column gap-2">
-                                {documents.map((doc, idx) => (
-                                    <div key={doc.id || idx} className="d-flex align-items-center p-3 rounded-3 border bg-white shadow-sm">
-                                        <div className={`rounded-circle d-flex align-items-center justify-content-center me-3 ${doc.status === 'approved' ? 'bg-success' : doc.status === 'rejected' ? 'bg-danger' : 'bg-warning'} bg-opacity-10`} style={{ width: '42px', height: '42px', flexShrink: 0 }}>
-                                            <i className={`bi ${doc.status === 'approved' ? 'bi-check-circle-fill text-success' : doc.status === 'rejected' ? 'bi-x-circle-fill text-danger' : 'bi-hourglass-split text-warning'}`}></i>
-                                        </div>
-                                        <div className="flex-grow-1 overflow-hidden">
-                                            <div className="fw-bold small text-truncate">{doc.original_filename}</div>
-                                            <div className="text-muted" style={{ fontSize: '0.7rem' }}>{doc.type_name} • {new Date(doc.created_at).toLocaleDateString()}</div>
-                                        </div>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <span className={`badge rounded-pill px-2 py-1 ${doc.status === 'approved' ? 'bg-success' : doc.status === 'rejected' ? 'bg-danger' : 'bg-warning text-dark'}`} style={{ fontSize: '0.65rem' }}>
-                                                {doc.status?.charAt(0).toUpperCase() + doc.status?.slice(1)}
-                                            </span>
-                                            {doc.file_path && (
-                                                <a href={doc.file_path} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-light border rounded-pill px-2" title="View">
-                                                    <i className="bi bi-eye small"></i>
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center text-muted py-4">
-                                <i className="bi bi-folder2-open display-6 d-block mb-2 opacity-25"></i>
-                                <p className="small mb-0">No documents uploaded yet.</p>
-                            </div>
-                        )}
                     </SectionCard>
                 )}
+
+
+
+
             </div>
 
             {/* ── Action Buttons ── */}
@@ -722,7 +720,7 @@ const UserProfile = () => {
                     <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
                         <div className="small text-muted">
                             {isLocked ? (
-                                <><i className="bi bi-info-circle me-1"></i>Your profile is submitted and locked. Go to <strong>Documents</strong> tab to upload files.</>
+                                <><i className="bi bi-info-circle me-1"></i>Your profile is submitted and locked.</>
                             ) : (
                                 <><i className="bi bi-info-circle me-1"></i>Save as draft to continue later, or submit to finalize (one-time only).</>
                             )}
@@ -747,7 +745,16 @@ const UserProfile = () => {
 
 /* ─────────────────── Faculty Profile (Simple View) ─────────────────── */
 const FacultyProfile = ({ user }) => {
-    const [formData, setFormData] = useState({ contact_number: '', address: '' });
+    const [formData, setFormData] = useState({ 
+        contact_number: '', 
+        address: '',
+        nickname: '',
+        gender: '',
+        birthdate: '',
+        civil_status: 'Single',
+        nationality: 'Filipino',
+        religion: ''
+    });
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [uploadingImage, setUploadingImage] = useState(false);
@@ -757,6 +764,12 @@ const FacultyProfile = ({ user }) => {
             setFormData({
                 contact_number: user.faculty.contact_number || '',
                 address: user.faculty.address || '',
+                nickname: user.faculty.nickname || '',
+                gender: user.faculty.gender || '',
+                birthdate: user.faculty.birthdate || '',
+                civil_status: user.faculty.civil_status || 'Single',
+                nationality: user.faculty.nationality || 'Filipino',
+                religion: user.faculty.religion || '',
             });
         }
     }, [user]);
@@ -826,10 +839,41 @@ const FacultyProfile = ({ user }) => {
                 {message && <div className={`alert ${message.includes('success') || message.includes('updated') ? 'alert-success' : 'alert-danger'} py-2 mb-3`}>{message}</div>}
                 <h6 className="fw-bold mb-3"><i className="bi bi-person me-2"></i>Faculty Information</h6>
                 <div className="row g-3 mb-4">
-                    <div className="col-md-6"><label className="form-label small text-muted">Full Name</label><input className="form-control rounded-3 py-2 bg-light" value={user?.name || ''} readOnly /></div>
-                    <div className="col-md-6"><label className="form-label small text-muted">Email</label><input className="form-control rounded-3 py-2 bg-light" value={user?.email || ''} readOnly /></div>
-                    <div className="col-md-6"><label className="form-label small text-muted">Contact Number</label><input name="contact_number" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.contact_number} onChange={handleChange} /></div>
-                    <div className="col-md-6"><label className="form-label small text-muted">Address</label><input name="address" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.address} onChange={handleChange} /></div>
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Full Name</label><input className="form-control rounded-3 py-2 bg-light" value={user?.name || ''} readOnly /></div>
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Email Address</label><input className="form-control rounded-3 py-2 bg-light" value={user?.email || ''} readOnly /></div>
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Nickname</label><input name="nickname" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.nickname} onChange={handleChange} placeholder="Johnny" /></div>
+                    
+                    <div className="col-md-6">
+                        <label className="form-label small text-muted mb-1 fw-semibold">Gender</label>
+                        <select name="gender" className="form-select rounded-3 py-2 border-primary border-opacity-50" value={formData.gender} onChange={handleChange}>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div className="col-md-6">
+                        <label className="form-label small text-muted mb-1 fw-semibold">Birthdate</label>
+                        <input name="birthdate" type="date" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.birthdate} onChange={handleChange} />
+                    </div>
+
+                    <div className="col-md-6">
+                        <label className="form-label small text-muted mb-1 fw-semibold">Civil Status</label>
+                        <select name="civil_status" className="form-select rounded-3 py-2 border-primary border-opacity-50" value={formData.civil_status} onChange={handleChange}>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Widowed">Widowed</option>
+                            <option value="Divorced">Divorced</option>
+                        </select>
+                    </div>
+
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Nationality</label><input name="nationality" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.nationality} onChange={handleChange} placeholder="Filipino" /></div>
+                    
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Religion</label><input name="religion" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.religion} onChange={handleChange} placeholder="e.g. Roman Catholic" /></div>
+                    
+                    <div className="col-md-6"><label className="form-label small text-muted mb-1 fw-semibold">Contact Number</label><input name="contact_number" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.contact_number} onChange={handleChange} /></div>
+                    <div className="col-12"><label className="form-label small text-muted mb-1 fw-semibold">Address</label><input name="address" className="form-control rounded-3 py-2 border-primary border-opacity-50" value={formData.address} onChange={handleChange} /></div>
                 </div>
                 <div className="d-flex justify-content-end">
                     <button type="submit" className="btn btn-primary rounded-pill px-4 py-2 fw-bold" disabled={saving}>

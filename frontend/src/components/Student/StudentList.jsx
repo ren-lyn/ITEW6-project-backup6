@@ -12,6 +12,10 @@ const StudentList = () => {
     const [showForm, setShowForm] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [studentToEdit, setStudentToEdit] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalStudents, setTotalStudents] = useState(0);
+
     const [filters, setFilters] = useState({
         search: new URLSearchParams(location.search).get('search') || '',
         course: '',
@@ -20,14 +24,24 @@ const StudentList = () => {
         affiliation: ''
     });
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (page = 1) => {
         setLoading(true);
         try {
-            const queryParams = new URLSearchParams(filters).toString();
+            const queryParams = new URLSearchParams({ ...filters, page }).toString();
             const response = await api.get(`/students?${queryParams}`);
-            console.log('Fetched students raw:', response.data);
-            const data = response.data.data || response.data; // Handle both paginated and non-paginated
-            setStudents(Array.isArray(data) ? data : []);
+            
+            // Handle Laravel Pagination Structure
+            const paginationData = response.data;
+            if (paginationData && paginationData.data) {
+                setStudents(paginationData.data);
+                setTotalPages(paginationData.last_page);
+                setCurrentPage(paginationData.current_page);
+                setTotalStudents(paginationData.total);
+            } else {
+                setStudents(Array.isArray(paginationData) ? paginationData : []);
+                setTotalPages(1);
+                setTotalStudents(Array.isArray(paginationData) ? paginationData.length : 0);
+            }
         } catch (error) {
             console.error('Error fetching students:', error);
         } finally {
@@ -36,7 +50,7 @@ const StudentList = () => {
     };
 
     useEffect(() => {
-        fetchStudents();
+        fetchStudents(1);
     }, []);
 
     const handleFilterChange = (e) => {
@@ -45,7 +59,14 @@ const StudentList = () => {
 
     const handleFilterSubmit = (e) => {
         e.preventDefault();
-        fetchStudents();
+        fetchStudents(1);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            fetchStudents(newPage);
+            window.scrollTo(0, 0);
+        }
     };
 
     const handleArchive = async (userId) => {
@@ -55,7 +76,7 @@ const StudentList = () => {
         try {
             await api.post(`/admin/users/${userId}/archive`);
             alert('User archived successfully');
-            fetchStudents();
+            fetchStudents(currentPage);
         } catch (error) {
             console.error('Error archiving user:', error);
             alert(error.response?.data?.message || 'Error archiving user.');
@@ -73,7 +94,7 @@ const StudentList = () => {
         if (window.confirm('Are you sure you want to remove this student record?')) {
             try {
                 await api.delete(`/students/${id}`);
-                fetchStudents();
+                fetchStudents(currentPage);
             } catch (err) {
                 console.error('Delete failed:', err);
                 alert('Failed to delete student.');
@@ -82,7 +103,7 @@ const StudentList = () => {
     };
 
     if (showForm) {
-        return <StudentForm student={studentToEdit} onSave={() => { setShowForm(false); setStudentToEdit(null); fetchStudents(); }} onCancel={() => { setShowForm(false); setStudentToEdit(null); }} />;
+        return <StudentForm student={studentToEdit} onSave={() => { setShowForm(false); setStudentToEdit(null); fetchStudents(currentPage); }} onCancel={() => { setShowForm(false); setStudentToEdit(null); }} />;
     }
 
     if (selectedStudent) {
@@ -94,7 +115,7 @@ const StudentList = () => {
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-5">
                 <div>
                     <h2 className="display-6 fw-bold mb-1 text-dark">Student Profiling</h2>
-                    <p className="text-muted mb-0">Manage comprehensive student data and academic history</p>
+                    <p className="text-muted mb-0">Manage {totalStudents} comprehensive student records</p>
                 </div>
                 <div className="d-flex gap-2">
                     <div className="btn-group shadow-sm rounded-pill overflow-hidden" style={{ border: '1px solid #dee2e6' }}>
@@ -179,133 +200,209 @@ const StudentList = () => {
                         <span className="visually-hidden">Loading...</span>
                     </div>
                 </div>
-            ) : viewMode === 'table' ? (
-                <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div className="table-responsive">
-                        <table className="table table-hover mb-0 align-middle">
-                            <thead className="bg-light">
-                                <tr className="text-secondary small text-uppercase fw-bold">
-                                    <th className="ps-4">Student ID</th>
-                                    <th>Full Name</th>
-                                    <th>Program</th>
-                                    <th>Level</th>
-                                    <th>Skills</th>
-                                    <th className="text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {students.map((student) => {
-                                    const profile_picture = student.user?.profile_picture;
-                                    const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `http://localhost:8000/storage/${profile_picture}`) : null;
-                                    
-                                    return (
-                                        <tr key={student.student_id} onClick={() => setSelectedStudent(student)} className="cursor-pointer">
-                                            <td className="ps-4 fw-bold text-primary">{student.id_number || student.student_id}</td>
-                                            <td className="ps-4">
-                                                <div className="d-flex align-items-center">
-                                                    {imgUrl ? (
-                                                        <img src={imgUrl} alt="Avatar" className="rounded-circle me-3 object-fit-cover shadow-sm" style={{ width: '40px', height: '40px', minWidth: '40px' }} />
-                                                    ) : (
-                                                        <div className="bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold" style={{ width: '40px', height: '40px', minWidth: '40px' }}>
-                                                            {student.first_name?.[0]}{student.last_name?.[0]}
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <div className="fw-bold text-dark">{(student.first_name || '') + ' ' + (student.last_name || '')}</div>
-                                                        <div className="small font-monospace text-muted">{student.email || student.user?.email}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        <td><span className="badge bg-primary bg-opacity-25 text-dark rounded-pill px-3 py-1 border border-primary border-opacity-10">{(student.academic_records?.[0]?.course || student.academicRecords?.[0]?.course) || 'N/A'}</span></td>
-                                        <td><div className="text-center bg-light rounded-pill px-2 py-1 small fw-bold">{(student.academic_records?.[0]?.year_level || student.academicRecords?.[0]?.year_level) || 'N/A'}</div></td>
-                                        <td>
-                                            <div className="d-flex flex-wrap gap-1">
-                                                {student.skills?.slice(0, 2).map(s => (
-                                                    <span key={s.id} className="badge bg-dark text-white fw-normal rounded-pill px-2" style={{ fontSize: '0.65rem' }}>{s.skill_name}</span>
-                                                ))}
-                                                {student.skills?.length > 2 && <span className="small text-muted" style={{ fontSize: '0.65rem' }}>+{student.skills.length - 2}</span>}
-                                            </div>
-                                        </td>
-                                        <td className="text-end pe-4">
-                                            <div className="btn-group btn-group-sm bg-white rounded-pill shadow-sm border overflow-hidden">
-                                                <button className="btn btn-white border-0 py-1" onClick={(e) => handleEdit(e, student)} title="Edit"><i className="bi bi-pencil-square text-primary"></i></button>
-                                                <button className="btn btn-white border-0 py-1" onClick={(e) => { e.stopPropagation(); handleArchive(student.user_id || student.user?.id); }} title="Archive"><i className="bi bi-archive text-warning" style={{ color: '#f37021' }}></i></button>
-                                                <button className="btn btn-danger-soft border-0 py-1" onClick={(e) => handleDelete(e, student.student_id)} title="Delete"><i className="bi bi-trash text-danger"></i></button>
-                                            </div>
-                                        </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                    {students.length === 0 && (
-                        <div className="text-center py-5 bg-white">
-                            <i className="bi bi-person-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
-                            <p className="text-muted fs-5">No students found matching your criteria.</p>
-                        </div>
-                    )}
-                </div>
             ) : (
-                <div className="row g-4">
-                    {students.map((student) => {
-                        const profile_picture = student.user?.profile_picture;
-                        const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `http://localhost:8000/storage/${profile_picture}`) : null;
-                        
-                        return (
-                            <div className="col-12 col-md-6 col-lg-4 col-xl-3" key={student.student_id}>
-                                <div 
-                                    className="card border-0 shadow-sm rounded-4 h-100 p-4 hover-lift cursor-pointer position-relative d-flex flex-column" 
-                                    onClick={() => setSelectedStudent(student)}
-                                    style={{ transition: 'all 0.3s ease' }}
-                                >
-                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                        {imgUrl ? (
-                                            <img src={imgUrl} alt="Student" className="rounded-circle shadow-sm object-fit-cover" style={{ width: '56px', height: '56px' }} />
-                                        ) : (
-                                            <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4" style={{ width: '56px', height: '56px' }}>
-                                                {student.first_name?.[0]}{student.last_name?.[0]}
+                <>
+                    {viewMode === 'table' ? (
+                        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                            <div className="table-responsive">
+                                <table className="table table-hover mb-0 align-middle">
+                                    <thead className="bg-light">
+                                        <tr className="text-secondary small text-uppercase fw-bold">
+                                            <th className="ps-4">Student ID</th>
+                                            <th>Full Name</th>
+                                            <th>Program</th>
+                                            <th>Level</th>
+                                            <th>Skills</th>
+                                            <th className="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {students.map((student) => {
+                                            const profile_picture = student.user?.profile_picture;
+                                            const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `http://localhost:8000/storage/${profile_picture}`) : null;
+                                            
+                                            // Determine latest academic record
+                                            const academicRecords = student.academic_records || student.academicRecords || [];
+                                            const latestRecord = [...academicRecords].sort((a, b) => {
+                                                if (parseInt(b.year_level) !== parseInt(a.year_level)) {
+                                                    return parseInt(b.year_level) - parseInt(a.year_level);
+                                                }
+                                                const getSemValue = (s) => {
+                                                    if (!s) return 0;
+                                                    if (typeof s === 'string' && s.includes('1st')) return 1;
+                                                    if (typeof s === 'string' && s.includes('2nd')) return 2;
+                                                    return parseInt(s) || 0;
+                                                };
+                                                return getSemValue(b.semester) - getSemValue(a.semester);
+                                            })[0] || {};
+
+                                            return (
+                                                <tr key={student.student_id} onClick={() => setSelectedStudent(student)} className="cursor-pointer">
+                                                    <td className="ps-4 fw-bold text-primary">{student.id_number || student.student_id}</td>
+                                                    <td>
+                                                        <div className="d-flex align-items-center">
+                                                            {imgUrl ? (
+                                                                <img src={imgUrl} alt="Avatar" className="rounded-circle me-3 object-fit-cover shadow-sm" style={{ width: '40px', height: '40px', minWidth: '40px' }} />
+                                                            ) : (
+                                                                <div className="bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold" style={{ width: '40px', height: '40px', minWidth: '40px' }}>
+                                                                    {student.first_name?.[0]}{student.last_name?.[0]}
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <div className="fw-bold text-dark">{(student.first_name || '') + ' ' + (student.last_name || '')}</div>
+                                                                <div className="small font-monospace text-muted">{student.email || student.user?.email}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td><span className="badge bg-primary bg-opacity-25 text-dark rounded-pill px-3 py-1 border border-primary border-opacity-10">{latestRecord.course || 'N/A'}</span></td>
+                                                    <td><div className="text-center bg-light rounded-pill px-2 py-1 small fw-bold">{latestRecord.year_level || 'N/A'}</div></td>
+                                                    <td>
+                                                        <div className="d-flex flex-wrap gap-1">
+                                                            {student.skills?.slice(0, 2).map(s => (
+                                                                <span key={s.skill_id || s.id} className="badge bg-dark text-white fw-normal rounded-pill px-2" style={{ fontSize: '0.65rem' }}>{s.skill_name}</span>
+                                                            ))}
+                                                            {student.skills?.length > 2 && <span className="small text-muted" style={{ fontSize: '0.65rem' }}>+{student.skills.length - 2}</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="text-end pe-4">
+                                                        <div className="btn-group btn-group-sm bg-white rounded-pill shadow-sm border overflow-hidden">
+                                                            <button className="btn btn-white border-0 py-1" onClick={(e) => handleEdit(e, student)} title="Edit"><i className="bi bi-pencil-square text-primary"></i></button>
+                                                            <button className="btn btn-white border-0 py-1" onClick={(e) => { e.stopPropagation(); handleArchive(student.user_id || student.user?.id); }} title="Archive"><i className="bi bi-archive text-warning" style={{ color: '#f37021' }}></i></button>
+                                                            <button className="btn btn-danger-soft border-0 py-1" onClick={(e) => handleDelete(e, student.student_id)} title="Delete"><i className="bi bi-trash text-danger"></i></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {students.length === 0 && (
+                                <div className="text-center py-5 bg-white">
+                                    <i className="bi bi-person-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                                    <p className="text-muted fs-5">No students found matching your criteria.</p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="row g-4 mb-4">
+                            {students.map((student) => {
+                                const profile_picture = student.user?.profile_picture;
+                                const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `http://localhost:8000/storage/${profile_picture}`) : null;
+                                
+                                // Determine latest academic record
+                                const academicRecords = student.academic_records || student.academicRecords || [];
+                                const latestRecord = [...academicRecords].sort((a, b) => {
+                                    if (parseInt(b.year_level) !== parseInt(a.year_level)) {
+                                        return parseInt(b.year_level) - parseInt(a.year_level);
+                                    }
+                                    const getSemValue = (s) => {
+                                        if (!s) return 0;
+                                        if (typeof s === 'string' && s.includes('1st')) return 1;
+                                        if (typeof s === 'string' && s.includes('2nd')) return 2;
+                                        return parseInt(s) || 0;
+                                    };
+                                    return getSemValue(b.semester) - getSemValue(a.semester);
+                                })[0] || {};
+
+                                return (
+                                    <div className="col-12 col-md-6 col-lg-4 col-xl-3" key={student.student_id}>
+                                        <div 
+                                            className="card border-0 shadow-sm rounded-4 h-100 p-4 hover-lift cursor-pointer position-relative d-flex flex-column" 
+                                            onClick={() => setSelectedStudent(student)}
+                                            style={{ transition: 'all 0.3s ease' }}
+                                        >
+                                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                                {imgUrl ? (
+                                                    <img src={imgUrl} alt="Student" className="rounded-circle shadow-sm object-fit-cover" style={{ width: '56px', height: '56px' }} />
+                                                ) : (
+                                                    <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4" style={{ width: '56px', height: '56px' }}>
+                                                        {student.first_name?.[0]}{student.last_name?.[0]}
+                                                    </div>
+                                                )}
+                                                <div className="d-flex gap-1" onClick={e => e.stopPropagation()}>
+                                                    <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Edit" onClick={(e) => handleEdit(e, student)}><i className="bi bi-pencil-square text-primary"></i></button>
+                                                    <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Archive" onClick={(e) => { e.stopPropagation(); handleArchive(student.user_id || student.user?.id); }}><i className="bi bi-archive text-warning" style={{ color: '#f37021' }}></i></button>
+                                                    <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Delete" onClick={(e) => handleDelete(e, student.student_id)}><i className="bi bi-trash text-danger"></i></button>
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="d-flex gap-1" onClick={e => e.stopPropagation()}>
-                                            <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Edit" onClick={(e) => handleEdit(e, student)}><i className="bi bi-pencil-square text-primary"></i></button>
-                                            <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Archive" onClick={(e) => { e.stopPropagation(); handleArchive(student.user_id || student.user?.id); }}><i className="bi bi-archive text-warning" style={{ color: '#f37021' }}></i></button>
-                                            <button className="btn btn-sm btn-light rounded-circle shadow-none" title="Delete" onClick={(e) => handleDelete(e, student.student_id)}><i className="bi bi-trash text-danger"></i></button>
+                                        
+                                        <h5 className="fw-bold mb-1 text-dark">{student.first_name} {student.last_name}</h5>
+                                        <p className="small text-muted mb-3 font-monospace">ID: {student.id_number || student.student_id}</p>
+                                        
+                                        <div className="bg-light bg-opacity-50 rounded-4 p-3 mb-3 border border-white">
+                                            <div className="d-flex justify-content-between mb-2 small shadow-sm bg-white p-2 rounded-3">
+                                                <span className="text-muted">GWA</span>
+                                                <span className="fw-bold text-primary">{latestRecord.gwa || 'N/A'}</span>
+                                            </div>
+                                            <div className="d-flex flex-wrap gap-1 mt-3">
+                                                {student.skills?.slice(0, 2).map((s, i) => (
+                                                    <span key={s.skill_id || i} className="badge bg-dark rounded-pill px-2 fw-normal" style={{ fontSize: '0.6rem' }}>{s.skill_name}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-auto pt-3 border-top border-light d-flex justify-content-between align-items-center">
+                                            <span className="badge bg-primary bg-opacity-25 text-dark rounded-pill px-2 py-1 small">
+                                                {latestRecord.course || 'CCS'}
+                                            </span>
+                                            <span className="small text-muted">Year {latestRecord.year_level || '-'}</span>
                                         </div>
                                     </div>
-                                
-                                <h5 className="fw-bold mb-1 text-dark">{student.first_name} {student.last_name}</h5>
-                                <p className="small text-muted mb-3 font-monospace">ID: {student.id_number || student.student_id}</p>
-                                
-                                <div className="bg-light bg-opacity-50 rounded-4 p-3 mb-3 border border-white">
-                                    <div className="d-flex justify-content-between mb-2 small shadow-sm bg-white p-2 rounded-3">
-                                        <span className="text-muted">GWA</span>
-                                        <span className="fw-bold text-primary">{student.academic_records?.[0]?.gwa || 'N/A'}</span>
-                                    </div>
-                                    <div className="d-flex flex-wrap gap-1 mt-3">
-                                        {student.skills?.slice(0, 2).map((s, i) => (
-                                            <span key={i} className="badge bg-dark rounded-pill px-2 fw-normal" style={{ fontSize: '0.6rem' }}>{s.skill_name}</span>
-                                        ))}
-                                    </div>
                                 </div>
-                                
-                                <div className="mt-auto pt-3 border-top border-light d-flex justify-content-between align-items-center">
-                                    <span className="badge bg-primary bg-opacity-25 text-dark rounded-pill px-2 py-1 small">
-                                        {(student.academic_records?.[0]?.course || student.academicRecords?.[0]?.course) || 'CCS'}
-                                    </span>
-                                    <span className="small text-muted">Year {(student.academic_records?.[0]?.year_level || student.academicRecords?.[0]?.year_level) || '-'}</span>
+                                );
+                            })}
+                            {students.length === 0 && (
+                                <div className="col-12 text-center py-5">
+                                     <i className="bi bi-person-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                                    <p className="text-muted fs-5">No students found matching your criteria.</p>
                                 </div>
-                            </div>
-                        </div>
-                        );
-                    })}
-                    {students.length === 0 && (
-                        <div className="col-12 text-center py-5">
-                             <i className="bi bi-person-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
-                            <p className="text-muted fs-5">No students found matching your criteria.</p>
+                            )}
                         </div>
                     )}
-                </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="d-flex justify-content-between align-items-center p-3 bg-white rounded-4 shadow-sm border border-light">
+                            <div className="small text-muted">
+                                Showing <span className="fw-bold">{(currentPage - 1) * 24 + 1}</span> to <span className="fw-bold">{Math.min(currentPage * 24, totalStudents)}</span> of <span className="fw-bold">{totalStudents}</span> students
+                            </div>
+                            <nav aria-label="Page navigation">
+                                <ul className="pagination pagination-sm mb-0 gap-1">
+                                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                        <button className="page-link rounded-circle border-0 shadow-none" onClick={() => handlePageChange(currentPage - 1)}>
+                                            <i className="bi bi-chevron-left"></i>
+                                        </button>
+                                    </li>
+                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                                        let pageNum = currentPage;
+                                        if (currentPage <= 3) pageNum = i + 1;
+                                        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                        else pageNum = currentPage - 2 + i;
+                                        
+                                        if (pageNum < 1 || pageNum > totalPages) return null;
+
+                                        return (
+                                            <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                                                <button 
+                                                    className={`page-link rounded-circle border-0 shadow-none px-3 ${currentPage === pageNum ? 'bg-primary text-white' : 'bg-light text-dark'}`} 
+                                                    onClick={() => handlePageChange(pageNum)}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
+                                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                        <button className="page-link rounded-circle border-0 shadow-none" onClick={() => handlePageChange(currentPage + 1)}>
+                                            <i className="bi bi-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

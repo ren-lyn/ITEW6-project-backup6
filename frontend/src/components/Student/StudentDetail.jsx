@@ -142,7 +142,22 @@ const StudentDetail = ({ studentId, onBack }) => {
     if (loading) return <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>;
     if (!student) return <div className="alert alert-danger">Student not found.</div>;
 
-    const riskLevel = student.risk_indicators_json?.length > 0 ? 'High' : (student.semester_gpa < 2.0 ? 'Medium' : 'Low');
+    // Determine latest academic record for summary
+    const academicRecords = student.academic_records || [];
+    const latestRecord = [...academicRecords].sort((a, b) => {
+        if (parseInt(b.year_level) !== parseInt(a.year_level)) {
+            return parseInt(b.year_level) - parseInt(a.year_level);
+        }
+        const getSemValue = (s) => {
+            if (!s) return 0;
+            if (s.includes('1st')) return 1;
+            if (s.includes('2nd')) return 2;
+            return parseInt(s) || 0;
+        };
+        return getSemValue(b.semester) - getSemValue(a.semester);
+    })[0] || {};
+
+    const riskLevel = student.risk_indicators_json?.length > 0 ? 'High' : ((latestRecord.gwa > 2.5) ? 'High' : (latestRecord.gwa > 2.0 ? 'Medium' : 'Low'));
 
     return (
         <div className="container-fluid p-0 animate-slide-up">
@@ -175,7 +190,7 @@ const StudentDetail = ({ studentId, onBack }) => {
                             <div className="bg-white rounded-4 p-3 shadow-sm mx-auto mb-4 border" style={{ maxWidth: '350px' }}>
                                 <h4 className="fw-bold mb-1 text-dark text-truncate px-2">{student.first_name} {student.last_name}</h4>
                                 <div className="badge bg-primary bg-opacity-25 text-dark border border-primary border-opacity-10 rounded-pill px-3 py-1">
-                                    {student.academic_records?.[0]?.course || 'No Course'}
+                                    {latestRecord.course || 'No Course'}
                                 </div>
                             </div>
 
@@ -185,13 +200,13 @@ const StudentDetail = ({ studentId, onBack }) => {
                                     <div className="col-6">
                                         <div className="p-3 bg-light rounded-4 h-100 border border-white">
                                             <div className="small text-muted mb-1">Year Level</div>
-                                            <h5 className="fw-bold mb-0">{student.academic_records?.[0]?.year_level || 'N/A'}</h5>
+                                            <h5 className="fw-bold mb-0">{latestRecord.year_level || 'N/A'}</h5>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="p-3 bg-light rounded-4 h-100 border border-white">
                                             <div className="small text-muted mb-1">Current GWA</div>
-                                            <h5 className="fw-bold mb-0 text-primary">{student.academic_records?.[0]?.gwa || 'N/A'}</h5>
+                                            <h5 className="fw-bold mb-0 text-primary">{latestRecord.gwa || 'N/A'}</h5>
                                         </div>
                                     </div>
                                 </div>
@@ -227,7 +242,7 @@ const StudentDetail = ({ studentId, onBack }) => {
                                     { id: 'non-academic', label: '4. Non-Academic', icon: 'bi-trophy' },
                                     { id: 'violations', label: '5. Violations', icon: 'bi-exclamation-octagon' },
                                     { id: 'skills', label: '6. Skills & Talents', icon: 'bi-lightning' },
-                                    { id: 'documents', label: '7. Documents', icon: 'bi-file-earmark-check' }
+                                    { id: 'medical', label: '7. Medical History', icon: 'bi-heart-pulse' }
                                 ].map(tab => (
                                     <li className="nav-item" key={tab.id}>
                                         <button
@@ -735,102 +750,49 @@ const StudentDetail = ({ studentId, onBack }) => {
 
 
 
-                            {activeTab === 'documents' && (
+                            {activeTab === 'medical' && (
                                 <div className="fade-in">
-                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-file-earmark-check-fill text-primary me-2"></i> Document Verification Queue</h5>
+                                    <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-heart-pulse-fill text-primary me-2"></i> Comprehensive Medical History</h5>
                                     
-                                    <div className="alert alert-info border-0 rounded-4 mb-4 small">
-                                        <i className="bi bi-info-circle me-2"></i> These documents are uploaded by the student for institutional verification. Review them carefully before approval.
+                                    <div className="alert alert-info border-0 rounded-4 mb-5 small">
+                                        <i className="bi bi-shield-check-fill me-2"></i> This information is provided by the student for institutional health profiling and emergency response readiness.
                                     </div>
 
-                                    <div className="table-responsive bg-white rounded-4 border overflow-hidden">
-                                        <table className="table table-hover align-middle border-0 mb-0">
-                                            <thead className="bg-light">
-                                                <tr className="small text-uppercase text-muted fw-bold">
-                                                    <th className="ps-4 border-0">Document Type</th>
-                                                    <th className="border-0">Status</th>
-                                                    <th className="border-0">Last Submitted</th>
-                                                    <th className="border-0 text-end pe-4">Institutional Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {student.user?.document_submissions?.map(doc => (
-                                                    <tr key={doc.id}>
-                                                        <td className="ps-4">
-                                                            <div className="fw-bold text-dark">{doc.type?.name || 'Requirement'}</div>
-                                                            <div className="small text-muted"><i className="bi bi-file-earmark-pdf me-1"></i> {doc.file_path ? doc.file_path.split('/').pop() : 'Attached File'}</div>
-                                                        </td>
-                                                        <td>
-                                                            <span className={`badge rounded-pill px-3 py-2 ${
-                                                                doc.status === 'approved' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 
-                                                                (doc.status === 'pending' ? 'bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50' : 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25')
-                                                            }`}>
-                                                                {doc.status.toUpperCase()}
-                                                            </span>
-                                                        </td>
-                                                        <td className="small text-muted">
-                                                            {new Date(doc.updated_at).toLocaleDateString()}
-                                                        </td>
-                                                        <td className="text-end pe-4">
-                                                            <div className="d-flex gap-2 justify-content-end">
-                                                                <a 
-                                                                    href={`${api.defaults.baseURL.replace('/api', '')}/storage/${doc.file_path}`} 
-                                                                    target="_blank" 
-                                                                    rel="noreferrer" 
-                                                                    className="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                                                >
-                                                                    <i className="bi bi-eye me-1"></i> Show
-                                                                </a>
-                                                                <button 
-                                                                    className="btn btn-sm btn-success rounded-pill px-3 shadow-none border-0" 
-                                                                    disabled={doc.status === 'approved' || actionLoadingDoc === doc.id}
-                                                                    onClick={() => handleApproveDoc(doc.id)}
-                                                                >
-                                                                    {actionLoadingDoc === doc.id ? <span className="spinner-border spinner-border-sm"></span> : 'Approve'}
-                                                                </button>
-                                                                <button 
-                                                                    className="btn btn-sm btn-outline-danger rounded-pill px-3 border-0"
-                                                                    disabled={doc.status === 'rejected' || actionLoadingDoc === doc.id}
-                                                                    onClick={() => setRejectDocData(doc)}
-                                                                >
-                                                                    Reject
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {(!student.user?.document_submissions || student.user.document_submissions.length === 0) && (
-                                                    <tr>
-                                                        <td colSpan="4" className="text-center py-5 text-muted">
-                                                            <i className="bi bi-journal-x display-4 d-block mb-3 opacity-25"></i>
-                                                            No document submissions found for this profile.
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* Sub-modal/Inline rejection for documents */}
-                                    {rejectDocData && (
-                                        <div className="mt-4 p-4 rounded-4 bg-danger bg-opacity-10 border border-danger border-opacity-25 fade-in">
-                                            <h6 className="fw-bold text-danger mb-3">Rejection Remarks for {rejectDocData.type?.name}</h6>
-                                            <form onSubmit={handleRejectDoc}>
-                                                <textarea 
-                                                    className="form-control border-0 shadow-sm rounded-4 mb-3" 
-                                                    rows="3" 
-                                                    placeholder="Reason for rejection (e.g. Blurry image, Wrong document)..."
-                                                    value={rejectRemarks}
-                                                    onChange={e => setRejectRemarks(e.target.value)}
-                                                    required
-                                                ></textarea>
-                                                <div className="d-flex gap-2">
-                                                    <button type="submit" className="btn btn-danger rounded-pill px-4 fw-bold" disabled={actionLoadingDoc === rejectDocData.id}>Submit Rejection</button>
-                                                    <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => { setRejectDocData(null); setRejectRemarks(''); }}>Cancel</button>
-                                                </div>
-                                            </form>
+                                    <div className="row g-4">
+                                        <div className="col-md-4">
+                                            <div className="p-4 rounded-4 bg-light border text-center">
+                                                <div className="small text-muted mb-1 text-uppercase fw-bold tracking-wider">Blood Type</div>
+                                                <h2 className="fw-bold mb-0 text-danger">{student.blood_type || '---'}</h2>
+                                            </div>
                                         </div>
-                                    )}
+                                        
+                                        <div className="col-12">
+                                            <div className="p-4 rounded-4 bg-white border border-light shadow-sm">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-muted tracking-widest border-bottom pb-2">Medical Conditions & History</h6>
+                                                <div className="bg-light p-3 rounded-3 mb-0" style={{ minHeight: '80px' }}>
+                                                    {student.medical_history ? <p className="mb-0">{student.medical_history}</p> : <p className="text-muted italic mb-0">No medical history recorded.</p>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="p-4 rounded-4 bg-white border border-light shadow-sm h-100">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-muted tracking-widest border-bottom pb-2">Allergies</h6>
+                                                <div className="bg-light p-3 rounded-3" style={{ minHeight: '60px' }}>
+                                                    {student.allergies ? <p className="mb-0 text-danger fw-medium">{student.allergies}</p> : <p className="text-muted italic mb-0">No known allergies.</p>}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <div className="p-4 rounded-4 bg-white border border-light shadow-sm h-100">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-muted tracking-widest border-bottom pb-2">Current Medications</h6>
+                                                <div className="bg-light p-3 rounded-3" style={{ minHeight: '60px' }}>
+                                                    {student.medications ? <p className="mb-0">{student.medications}</p> : <p className="text-muted italic mb-0">No current medications.</p>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>

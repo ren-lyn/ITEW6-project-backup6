@@ -137,6 +137,12 @@ class StudentProfileController extends Controller
             'skill_ids.*' => 'integer|exists:skills,skill_id',
             'talent_ids' => 'nullable|array',
             'talent_ids.*' => 'integer|exists:talents,talent_id',
+
+            // Medical History
+            'blood_type' => 'nullable|string|max:10',
+            'medical_history' => 'nullable|string',
+            'allergies' => 'nullable|string',
+            'medications' => 'nullable|string',
         ]);
 
         // Update student personal + contact + educational fields
@@ -160,6 +166,10 @@ class StudentProfileController extends Controller
             'senior_high_school' => $validated['senior_high_school'] ?? $student->senior_high_school,
             'senior_high_year_graduated' => $validated['senior_high_year_graduated'] ?? $student->senior_high_year_graduated,
             'senior_high_awards' => $validated['senior_high_awards'] ?? $student->senior_high_awards,
+            'blood_type' => $validated['blood_type'] ?? $student->blood_type,
+            'medical_history' => $validated['medical_history'] ?? $student->medical_history,
+            'allergies' => $validated['allergies'] ?? $student->allergies,
+            'medications' => $validated['medications'] ?? $student->medications,
             'profile_submitted' => true,
             'profile_submitted_at' => now(),
         ]);
@@ -258,6 +268,10 @@ class StudentProfileController extends Controller
             'skill_ids.*' => 'integer|exists:skills,skill_id',
             'talent_ids' => 'nullable|array',
             'talent_ids.*' => 'integer|exists:talents,talent_id',
+            'blood_type' => 'nullable|string|max:10',
+            'medical_history' => 'nullable|string',
+            'allergies' => 'nullable|string',
+            'medications' => 'nullable|string',
         ]);
 
         $student->update([
@@ -280,6 +294,10 @@ class StudentProfileController extends Controller
             'senior_high_school' => $validated['senior_high_school'] ?? $student->senior_high_school,
             'senior_high_year_graduated' => $validated['senior_high_year_graduated'] ?? $student->senior_high_year_graduated,
             'senior_high_awards' => $validated['senior_high_awards'] ?? $student->senior_high_awards,
+            'blood_type' => $validated['blood_type'] ?? $student->blood_type,
+            'medical_history' => $validated['medical_history'] ?? $student->medical_history,
+            'allergies' => $validated['allergies'] ?? $student->allergies,
+            'medications' => $validated['medications'] ?? $student->medications,
         ]);
 
         Guardian::updateOrCreate(

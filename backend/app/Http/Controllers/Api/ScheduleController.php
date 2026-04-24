@@ -45,6 +45,18 @@ class ScheduleController extends Controller
     {
         $faculty = auth()->user()->faculty;
         if (!$faculty) return response()->json([]);
-        return response()->json($faculty->schedules()->orderBy('section')->get());
+
+        $query = $faculty->schedules();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('subject_code', 'like', "%{$search}%")
+                    ->orWhere('section', 'like', "%{$search}%");
+            });
+        }
+
+        return response()->json($query->orderBy('section')->get());
     }
 }

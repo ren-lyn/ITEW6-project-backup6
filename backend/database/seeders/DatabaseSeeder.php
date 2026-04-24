@@ -44,7 +44,8 @@ class DatabaseSeeder extends Seeder
             DashboardStatsSeeder::class,
             DocumentTypeSeeder::class,
             PendingAccountsSeeder::class,
-            SkillsAndTalentsSeeder::class
+            SkillsAndTalentsSeeder::class,
+            LargeStudentSeeder::class
         ]);
     }
 }

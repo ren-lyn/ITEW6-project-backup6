@@ -172,7 +172,7 @@ const UserDashboard = () => {
                             </div>
                             <div className="small text-muted mt-2 opacity-75">
                                 {completion_score === 100
-                                    ? 'Your profile is complete! Check your documents.'
+                                    ? 'Your profile is complete!'
                                     : 'Complete your profile to get approved faster!'}
                             </div>
                         </div>
@@ -211,28 +211,21 @@ const UserDashboard = () => {
                     </Link>
                 </div>
 
-                <div className="col-md-4">
-                    <Link to="/user/documents" className="text-decoration-none transition-all">
-                        <div className="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white d-flex flex-row align-items-center card-stats">
-                            <div className="bg-success bg-opacity-10 text-success rounded-3 d-flex align-items-center justify-content-center me-4" style={{ width: '56px', height: '56px' }}>
-                                <i className="bi bi-file-earmark-text fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 className="fw-bold text-dark mb-1">Documents</h6>
-                                <p className="small text-muted mb-0">Upload requirements</p>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
+
 
 
             </div>
 
             <div className="mt-5">
-                <h5 className="fw-bold text-dark mb-4 d-flex align-items-center">
-                    <i className="bi bi-journal-bookmark text-primary me-2"></i>
-                    Handled Courses & Sections
-                </h5>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold text-dark mb-0 d-flex align-items-center">
+                        <i className="bi bi-journal-bookmark text-primary me-2"></i>
+                        Handled Courses & Sections
+                    </h5>
+                    <Link to="/user/handled-courses" className="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                        View All <i className="bi bi-arrow-right ms-1"></i>
+                    </Link>
+                </div>
                 {facultySchedules.length === 0 ? (
                     <div className="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
                         <i className="bi bi-calendar-x text-muted fs-1 mb-3"></i>

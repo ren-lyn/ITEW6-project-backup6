@@ -20,6 +20,7 @@ import VerificationList from './pages/Admin/VerificationList';
 import AdminReports from './pages/Admin/AdminReports';
 import AdminArchives from './pages/Admin/AdminArchives';
 import StudentSchedule from './pages/Student/StudentSchedule';
+import FacultyHandledCourses from './pages/Faculty/FacultyHandledCourses';
 
 
 
@@ -80,18 +81,15 @@ const Layout = ({ children }) => {
         menuItems = [
             { name: 'Faculty Dashboard', path: '/user', icon: 'bi-grid-1x2' },
             { name: 'My Profile', path: '/user/profile', icon: 'bi-person' },
-            { name: 'Documents', path: '/user/documents', icon: 'bi-file-earmark' },
 
             { name: 'My Syllabi/Research', path: '/user/research', icon: 'bi-journal-text' },
+            { name: 'Handled Courses & Sections', path: '/user/handled-courses', icon: 'bi-journal-bookmark' },
         ];
     } else {
         menuItems = [
             { name: 'Student Dashboard', path: '/user', icon: 'bi-grid-1x2' },
             { name: 'My Profile', path: '/user/profile', icon: 'bi-person' },
-            { name: 'Class Schedule', path: '/user/schedule', icon: 'bi-clock' },
-
-
-            { name: 'Documents', path: '/user/documents', icon: 'bi-file-earmark' },
+            { name: 'My Schedule', path: '/user/schedule', icon: 'bi-calendar3' },
             { name: 'Events', path: '/user/events', icon: 'bi-calendar-event' },
         ];
     }
@@ -289,11 +287,12 @@ function App() {
                             <Routes>
                                 <Route path="/" element={<UserDashboard />} />
                                 <Route path="/profile" element={<UserProfile />} />
-                                <Route path="/documents" element={<DocumentUpload />} />
+
                                 <Route path="/schedule" element={<StudentSchedule />} />
 
 
                                 <Route path="/events" element={<EventList />} />
+                                <Route path="/handled-courses" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyHandledCourses /></ProtectedRoute>} />
                                 <Route path="/research" element={<ResearchList />} />
                                 <Route path="*" element={<Navigate to="/user" replace />} />
                             </Routes>
