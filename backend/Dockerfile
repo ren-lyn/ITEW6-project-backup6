@@ -45,4 +45,4 @@ RUN composer install --no-dev --optimize-autoloader
 EXPOSE 80
 
 # Start script
-CMD php artisan migrate --force && apache2-foreground
+CMD php artisan migrate --seed --force && apache2-foreground
