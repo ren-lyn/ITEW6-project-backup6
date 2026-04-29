@@ -13,23 +13,32 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'CCS Admin',
-            'email' => 'admin@ccs.edu',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'status' => 'approved',
-            'must_change_password' => false,
-        ]);
+        // Skip seeding if data already exists
+        if (User::where('email', 'admin@ccs.edu')->exists()) {
+            return;
+        }
 
-        User::create([
-            'name' => 'CCS Dean',
-            'email' => 'dean@ccs.edu',
-            'password' => Hash::make('password'),
-            'role' => 'dean',
-            'status' => 'approved',
-            'must_change_password' => false,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@ccs.edu'],
+            [
+                'name' => 'CCS Admin',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'approved',
+                'must_change_password' => false,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'dean@ccs.edu'],
+            [
+                'name' => 'CCS Dean',
+                'password' => Hash::make('password'),
+                'role' => 'dean',
+                'status' => 'approved',
+                'must_change_password' => false,
+            ]
+        );
 
         $this->call([
             FacultySeeder::class,
