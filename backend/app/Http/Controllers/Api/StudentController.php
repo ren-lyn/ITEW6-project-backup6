@@ -4,13 +4,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Student::with(['user', 'academicRecords', 'skills', 'talents', 'organizations'])
-            ->whereHas('user');
+        $query = Student::with([
+            'user', 
+            'academicRecords' => function($q) {
+                $q->orderBy('year_level', 'desc')
+                  ->orderBy('semester', 'desc')
+                  ->orderBy('record_id', 'desc');
+            }, 
+            'skills', 
+            'talents', 
+            'organizations'
+        ])->whereHas('user');
 
         // Advanced Search & Filtering
         if ($request->filled('search')) {
@@ -22,28 +32,25 @@ class StudentController extends Controller
             });
         }
 
+        // Academic Filters (Course, Year, GWA) - Strictly apply to the LATEST record only
         if ($request->filled('course')) {
-            $query->whereHas('academicRecords', function($q) use ($request) {
-                $q->where('course', $request->input('course'));
-            });
+            $course = $request->input('course');
+            $query->whereRaw("(SELECT course FROM academic_records WHERE student_id = students.student_id ORDER BY year_level DESC, semester DESC, record_id DESC LIMIT 1) = ?", [$course]);
         }
-        
+
         if ($request->filled('year_level')) {
-            $query->whereHas('academicRecords', function($q) use ($request) {
-                $q->where('year_level', $request->input('year_level'));
-            });
+            $year = $request->input('year_level');
+            $query->whereRaw("(SELECT year_level FROM academic_records WHERE student_id = students.student_id ORDER BY year_level DESC, semester DESC, record_id DESC LIMIT 1) = ?", [$year]);
         }
 
         if ($request->filled('min_gwa')) {
-            $query->whereHas('academicRecords', function($q) use ($request) {
-                $q->where('gwa', '>=', $request->input('min_gwa'));
-            });
+            $min = $request->input('min_gwa');
+            $query->whereRaw("(SELECT gwa FROM academic_records WHERE student_id = students.student_id ORDER BY year_level DESC, semester DESC, record_id DESC LIMIT 1) >= ?", [$min]);
         }
 
         if ($request->filled('max_gwa')) {
-            $query->whereHas('academicRecords', function($q) use ($request) {
-                $q->where('gwa', '<=', $request->input('max_gwa'));
-            });
+            $max = $request->input('max_gwa');
+            $query->whereRaw("(SELECT gwa FROM academic_records WHERE student_id = students.student_id ORDER BY year_level DESC, semester DESC, record_id DESC LIMIT 1) <= ?", [$max]);
         }
 
         // Filtering by Skill (Relationship)
@@ -153,7 +160,11 @@ class StudentController extends Controller
         return response()->json($student->load([
             'user', 
             'guardians', 
-            'academicRecords', 
+            'academicRecords' => function($q) {
+                $q->orderBy('year_level', 'desc')
+                  ->orderBy('semester', 'desc')
+                  ->orderBy('record_id', 'desc');
+            }, 
             'violations', 
             'achievements', 
             'skills', 

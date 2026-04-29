@@ -26,6 +26,11 @@ class Student extends Model
         return $this->hasMany(AcademicRecord::class, 'student_id');
     }
 
+    public function latestAcademicRecord()
+    {
+        return $this->hasOne(AcademicRecord::class, 'student_id')->latestOfMany('record_id');
+    }
+
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class, 'student_id');

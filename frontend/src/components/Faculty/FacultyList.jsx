@@ -134,7 +134,7 @@ const FacultyList = () => {
                     'Email': f.email || f.user?.email,
                     'Department': f.department || 'N/A',
                     'Rank': f.rank || 'N/A',
-                    'Research Areas': (f.research_areas_json || []).join(', ')
+                    'Research Areas': (f.research_areas_json || []).join(', ') || 'None'
                 };
             });
             let csv = Papa.unparse(exportData);
@@ -160,22 +160,46 @@ const FacultyList = () => {
         try {
             const dataToExport = await fetchExportData();
             const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const accentColor = '#198754'; // Primary Green
 
-            const reportTitle = getReportTitle();
-            const splitTitle = doc.splitTextToSize(reportTitle, 180);
+            // Header Background
+            doc.setFillColor(accentColor);
+            doc.rect(0, 0, pageWidth, 40, 'F');
 
-            doc.setFontSize(16);
-            doc.setTextColor('#198754');
-            doc.text(splitTitle, 14, 20);
-
-            const afterTitleY = 20 + ((splitTitle.length - 1) * 7);
-
+            // Institutional Branding
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text('COLLEGE OF COMPUTER STUDIES', 14, 20);
+            
             doc.setFontSize(10);
-            doc.setTextColor('#666666');
-            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, afterTitleY + 8);
-            doc.text(`Total Records: ${dataToExport.length}`, 14, afterTitleY + 14);
+            doc.setFont('helvetica', 'normal');
+            doc.text('CCS Profiling System - Faculty Research & Development Division', 14, 28);
+            
+            // Report Details Box
+            doc.setFillColor(248, 249, 250);
+            doc.roundedRect(14, 45, pageWidth - 28, 30, 2, 2, 'F');
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FACULTY DIRECTORY REPORT', 20, 55);
 
-            const nextY = afterTitleY + 14;
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 62);
+            doc.text(`Total Records: ${dataToExport.length}`, 20, 68);
+
+            // Filter Summary (if any)
+            const reportTitle = getReportTitle().replace('Faculty Report: ', '');
+            if (reportTitle !== 'All Faculty') {
+                const splitFilters = doc.splitTextToSize(`Filters: ${reportTitle}`, pageWidth - 40);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'italic');
+                doc.text(splitFilters, 20, 75);
+            }
 
             const tableData = dataToExport.map(f => {
                 return [
@@ -183,17 +207,47 @@ const FacultyList = () => {
                     `${f.first_name} ${f.last_name}`,
                     f.department || 'N/A',
                     f.rank || 'N/A',
-                    (f.research_areas_json || []).slice(0, 3).join(', ') + ((f.research_areas_json?.length || 0) > 3 ? '...' : '')
+                    (f.research_areas_json || []).join(', ') || 'None'
                 ];
             });
 
             autoTable(doc, {
-                head: [['Employee ID', 'Full Name', 'Department', 'Rank', 'Research Areas']],
+                head: [['Employee ID', 'Full Name', 'Department', 'Academic Rank', 'Research Areas']],
                 body: tableData,
-                startY: nextY + 6,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: '#198754' }
+                startY: 85,
+                margin: { left: 14, right: 14 },
+                styles: { 
+                    fontSize: 8,
+                    cellPadding: 3,
+                    valign: 'middle',
+                    overflow: 'linebreak'
+                },
+                headStyles: { 
+                    fillColor: accentColor,
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { cellWidth: 25, halign: 'center' },
+                    2: { cellWidth: 35, halign: 'center' },
+                    3: { cellWidth: 35, halign: 'center' },
+                    4: { cellWidth: 'auto' }
+                },
+                alternateRowStyles: {
+                    fillColor: [250, 250, 250]
+                }
             });
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
+                doc.text('© 2026 CCS Profiling System - Official Confidential Document', 14, doc.internal.pageSize.getHeight() - 10);
+            }
 
             doc.save(`faculty_report_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (error) {

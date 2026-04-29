@@ -144,18 +144,7 @@ const StudentDetail = ({ studentId, onBack }) => {
 
     // Determine latest academic record for summary
     const academicRecords = student.academic_records || [];
-    const latestRecord = [...academicRecords].sort((a, b) => {
-        if (parseInt(b.year_level) !== parseInt(a.year_level)) {
-            return parseInt(b.year_level) - parseInt(a.year_level);
-        }
-        const getSemValue = (s) => {
-            if (!s) return 0;
-            if (s.includes('1st')) return 1;
-            if (s.includes('2nd')) return 2;
-            return parseInt(s) || 0;
-        };
-        return getSemValue(b.semester) - getSemValue(a.semester);
-    })[0] || {};
+    const latestRecord = academicRecords[0] || {};
 
     const riskLevel = student.risk_indicators_json?.length > 0 ? 'High' : ((latestRecord.gwa > 2.5) ? 'High' : (latestRecord.gwa > 2.0 ? 'Medium' : 'Low'));
 

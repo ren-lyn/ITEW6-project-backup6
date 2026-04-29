@@ -199,6 +199,10 @@ const StudentList = () => {
             const dataToExport = await fetchExportData();
             const exportData = dataToExport.map(s => {
                 const latestRecord = (s.academicRecords || s.academic_records || [])[0] || {};
+                const skills = s.skills?.map(sk => sk.skill_name) || [];
+                const talents = s.talents?.map(t => t.talent_name) || [];
+                const allAptitudes = [...skills, ...talents].join(', ');
+
                 return {
                     'Student ID': s.id_number || s.student_id,
                     'First Name': s.first_name,
@@ -207,7 +211,7 @@ const StudentList = () => {
                     'Program': latestRecord.course || 'N/A',
                     'Year Level': latestRecord.year_level || 'N/A',
                     'GWA': latestRecord.gwa || 'N/A',
-                    'Skills': s.skills?.map(sk => sk.skill_name).join(', ') || ''
+                    'Skills & Talents': allAptitudes || 'None'
                 };
             });
             let csv = Papa.unparse(exportData);
@@ -233,42 +237,101 @@ const StudentList = () => {
         try {
             const dataToExport = await fetchExportData();
             const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const accentColor = '#F26A21'; // Primary Orange
 
-            const reportTitle = getReportTitle();
-            const splitTitle = doc.splitTextToSize(reportTitle, 180);
+            // Header Background
+            doc.setFillColor(accentColor);
+            doc.rect(0, 0, pageWidth, 40, 'F');
 
-            doc.setFontSize(16);
-            doc.setTextColor('#c14d0f');
-            doc.text(splitTitle, 14, 20);
-
-            const afterTitleY = 20 + ((splitTitle.length - 1) * 7);
-
+            // Institutional Branding
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text('COLLEGE OF COMPUTER STUDIES', 14, 20);
+            
             doc.setFontSize(10);
-            doc.setTextColor('#666666');
-            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, afterTitleY + 8);
-            doc.text(`Total Records: ${dataToExport.length}`, 14, afterTitleY + 14);
+            doc.setFont('helvetica', 'normal');
+            doc.text('CCS Profiling System - Student Management Division', 14, 28);
+            
+            // Report Details Box
+            doc.setFillColor(248, 249, 250);
+            doc.roundedRect(14, 45, pageWidth - 28, 30, 2, 2, 'F');
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('STUDENT DATA REPORT', 20, 55);
 
-            const nextY = afterTitleY + 14;
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 62);
+            doc.text(`Total Records: ${dataToExport.length}`, 20, 68);
+
+            // Filter Summary (if any)
+            const reportTitle = getReportTitle().replace('Student Report: ', '');
+            if (reportTitle !== 'All Students') {
+                const splitFilters = doc.splitTextToSize(`Filters: ${reportTitle}`, pageWidth - 40);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'italic');
+                doc.text(splitFilters, 20, 75);
+            }
 
             const tableData = dataToExport.map(s => {
                 const latestRecord = (s.academicRecords || s.academic_records || [])[0] || {};
+                const skills = s.skills?.map(sk => sk.skill_name) || [];
+                const talents = s.talents?.map(t => t.talent_name) || [];
+                const combined = [...skills, ...talents].join(', ');
+
                 return [
                     s.id_number || s.student_id,
                     `${s.first_name} ${s.last_name}`,
                     latestRecord.course || 'N/A',
                     latestRecord.year_level || 'N/A',
                     latestRecord.gwa || 'N/A',
-                    s.skills?.map(sk => sk.skill_name).slice(0, 3).join(', ') + (s.skills?.length > 3 ? '...' : '') || ''
+                    combined || 'None'
                 ];
             });
 
             autoTable(doc, {
-                head: [['Student ID', 'Full Name', 'Program', 'Year', 'GWA', 'Skills']],
+                head: [['Student ID', 'Full Name', 'Program', 'Year', 'GWA', 'Skills & Talents']],
                 body: tableData,
-                startY: nextY + 6,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: '#F26A21' }
+                startY: 85,
+                margin: { left: 14, right: 14 },
+                styles: { 
+                    fontSize: 8,
+                    cellPadding: 3,
+                    valign: 'middle',
+                    overflow: 'linebreak'
+                },
+                headStyles: { 
+                    fillColor: accentColor,
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { cellWidth: 25, halign: 'center' },
+                    2: { cellWidth: 20, halign: 'center' },
+                    3: { cellWidth: 15, halign: 'center' },
+                    4: { cellWidth: 15, halign: 'center' },
+                    5: { cellWidth: 'auto' }
+                },
+                alternateRowStyles: {
+                    fillColor: [250, 250, 250]
+                }
             });
+
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
+                doc.text('© 2026 CCS Profiling System - Official Confidential Document', 14, doc.internal.pageSize.getHeight() - 10);
+            }
 
             doc.save(`students_report_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (error) {
@@ -343,7 +406,7 @@ const StudentList = () => {
                                             step="0.01"
                                             name="min_gwa"
                                             className="form-control border-0 shadow-sm rounded-3"
-                                            placeholder="Min GWA"
+                                            placeholder="Min (Best: 1.0)"
                                             value={filters.min_gwa}
                                             onChange={handleFilterChange}
                                         />
@@ -354,7 +417,7 @@ const StudentList = () => {
                                             step="0.01"
                                             name="max_gwa"
                                             className="form-control border-0 shadow-sm rounded-3"
-                                            placeholder="Max GWA"
+                                            placeholder="Max (Fail: 5.0)"
                                             value={filters.max_gwa}
                                             onChange={handleFilterChange}
                                         />
@@ -516,18 +579,7 @@ const StudentList = () => {
                                                     const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `${STORAGE_URL}/${profile_picture}`) : null;
 
                                                     const academicRecords = student.academic_records || student.academicRecords || [];
-                                                    const latestRecord = [...academicRecords].sort((a, b) => {
-                                                        if (parseInt(b.year_level) !== parseInt(a.year_level)) {
-                                                            return parseInt(b.year_level) - parseInt(a.year_level);
-                                                        }
-                                                        const getSemValue = (s) => {
-                                                            if (!s) return 0;
-                                                            if (typeof s === 'string' && s.includes('1st')) return 1;
-                                                            if (typeof s === 'string' && s.includes('2nd')) return 2;
-                                                            return parseInt(s) || 0;
-                                                        };
-                                                        return getSemValue(b.semester) - getSemValue(a.semester);
-                                                    })[0] || {};
+                                                    const latestRecord = academicRecords[0] || {};
 
                                                     return (
                                                         <tr key={student.student_id} onClick={() => setSelectedStudent(student)} className="cursor-pointer">
@@ -584,18 +636,7 @@ const StudentList = () => {
                                         const imgUrl = profile_picture ? (profile_picture.startsWith('http') ? profile_picture : `${STORAGE_URL}/${profile_picture}`) : null;
 
                                         const academicRecords = student.academic_records || student.academicRecords || [];
-                                        const latestRecord = [...academicRecords].sort((a, b) => {
-                                            if (parseInt(b.year_level) !== parseInt(a.year_level)) {
-                                                return parseInt(b.year_level) - parseInt(a.year_level);
-                                            }
-                                            const getSemValue = (s) => {
-                                                if (!s) return 0;
-                                                if (typeof s === 'string' && s.includes('1st')) return 1;
-                                                if (typeof s === 'string' && s.includes('2nd')) return 2;
-                                                return parseInt(s) || 0;
-                                            };
-                                            return getSemValue(b.semester) - getSemValue(a.semester);
-                                        })[0] || {};
+                                        const latestRecord = academicRecords[0] || {};
 
                                         return (
                                             <div className="col-12 col-md-6 col-xl-4" key={student.student_id}>
