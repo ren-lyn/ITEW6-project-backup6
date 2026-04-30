@@ -49,10 +49,19 @@ class LargeStudentSeeder extends Seeder
         $this->command->getOutput()->progressStart(1000);
 
         for ($i = 0; $i < 1000; $i++) {
+            // Generate deterministic email for this index
+            // We use a fixed first/last name pattern for the index to ensure consistency across runs
+            $email = "student.demo.{$i}@ccs.edu";
+            
+            // SKIP if this specific student already exists
+            if (User::where('email', $email)->exists()) {
+                $this->command->getOutput()->progressAdvance();
+                continue;
+            }
+
             // 1. Create User
             $firstName = $faker->firstName;
             $lastName = $faker->lastName;
-            $email = strtolower($firstName . '.' . $lastName . '.' . $i . '@ccs.edu');
             
             $user = User::create([
                 'name' => $firstName . ' ' . $lastName,
@@ -80,24 +89,6 @@ class LargeStudentSeeder extends Seeder
                 'email' => $email,
                 'present_address' => $faker->address,
                 'permanent_address' => $faker->address,
-                
-                // Educational Background
-                'elementary_school' => $faker->company . ' Elementary School',
-                'elementary_year_graduated' => '2016',
-                'elementary_awards' => $faker->randomElement(['None', 'With Honors', 'Valedictorian']),
-                'junior_high_school' => $faker->company . ' High School',
-                'junior_high_year_graduated' => '2020',
-                'junior_high_awards' => $faker->randomElement(['None', 'With High Honors', 'Leadership Award']),
-                'senior_high_school' => $faker->company . ' Senior High',
-                'senior_high_year_graduated' => '2022',
-                'senior_high_awards' => $faker->randomElement(['None', 'With Honors', 'STEM Excellence']),
-                
-                // Medical History
-                'blood_type' => $faker->randomElement(['A+', 'B+', 'O+', 'AB+']),
-                'medical_history' => $faker->boolean(20) ? $faker->sentence : 'No significant medical history.',
-                'allergies' => $faker->boolean(20) ? $faker->word : 'None',
-                'medications' => $faker->boolean(10) ? $faker->word : 'None',
-                
                 'profile_submitted' => true,
                 'profile_submitted_at' => now(),
                 'id_number' => '202' . $faker->numberBetween(2, 6) . '-' . sprintf('%04d', $i + 1),
@@ -107,16 +98,10 @@ class LargeStudentSeeder extends Seeder
             Guardian::create([
                 'student_id' => $student->student_id,
                 'father_name' => $faker->name('male'),
-                'father_occupation' => $faker->jobTitle,
-                'father_contact' => $faker->phoneNumber,
-                'mother_name' => $faker->name('female'),
-                'mother_occupation' => $faker->jobTitle,
-                'mother_contact' => $faker->phoneNumber,
                 'guardian_name' => $faker->name,
-                'guardian_contact' => $faker->phoneNumber,
                 'emergency_contact' => $faker->phoneNumber,
                 'family_income_bracket' => $faker->randomElement(['Below 10,000', '10,000 - 20,000', '20,000 - 40,000', '40,000 - 70,000']),
-                'living_status' => $faker->randomElement(['Living with Parents', 'Boarding House', 'Dormitory', 'Living with Relatives']),
+                'living_status' => $faker->randomElement(['Living with Parents', 'Boarding House', 'Dormitory']),
             ]);
 
             // 4. Create Physical Profile
@@ -128,97 +113,42 @@ class LargeStudentSeeder extends Seeder
                 'image_presence' => true,
             ]);
 
-            // 5. Create Academic Records (Historical)
-            // Generate records for all previous semesters based on current year level
-            for ($year = 1; $year <= $yearLevel; $year++) {
-                // For the current year, we only add the 1st semester as "Current" or "Active"
-                // For previous years, we add both 1st and 2nd semesters
-                $semsToGen = ($year < $yearLevel) ? [1, 2] : [1];
-                
-                foreach ($semsToGen as $sem) {
-                    AcademicRecord::create([
-                        'student_id' => $student->student_id,
-                        'course' => $course,
-                        'year_level' => $year,
-                        'semester' => $sem . ($sem == 1 ? 'st' : 'nd') . ' Semester',
-                        'gwa' => $faker->randomFloat(2, 1.0, 3.0),
-                        'academic_standing' => 'Regular',
-                        'section' => $faker->randomElement(['A', 'B', 'C', 'D']),
-                    ]);
-                }
-            }
+            // 5. Create Academic Records
+            AcademicRecord::create([
+                'student_id' => $student->student_id,
+                'course' => $course,
+                'year_level' => $yearLevel,
+                'semester' => '1st Semester',
+                'gwa' => $faker->randomFloat(2, 1.0, 3.0),
+                'academic_standing' => 'Regular',
+                'section' => $faker->randomElement(['A', 'B', 'C', 'D']),
+            ]);
 
-            // 6. Attach Skills & Talents
+            // 6. Attach Skills & Talents (Using syncWithoutDetaching for safety)
             if ($skills->isNotEmpty()) {
-                $randomSkills = $skills->random(rand(2, 6));
+                $randomSkills = $skills->random(rand(2, 4));
                 foreach ($randomSkills as $skill) {
-                    $student->skills()->attach($skill->skill_id, ['proficiency_level' => rand(1, 5)]);
+                    $student->skills()->syncWithoutDetaching([$skill->skill_id => ['proficiency_level' => rand(1, 5)]]);
                 }
             }
             
             if ($talents->isNotEmpty()) {
-                $student->talents()->attach($talents->random(rand(1, 3))->pluck('talent_id')->toArray());
+                $student->talents()->syncWithoutDetaching($talents->random(rand(1, 2))->pluck('talent_id')->toArray());
             }
 
-            // 7. Non-Academic (Achievements & Events)
-            if ($faker->boolean(30)) {
-                Achievement::create([
-                    'student_id' => $student->student_id,
-                    'title' => $faker->randomElement(['Dean\'s Lister', 'Programming Competition Finalist', 'Math Quiz Bee Winner', 'Service Award']),
-                    'category' => 'Academic/Co-curricular',
-                    'date_awarded' => $faker->date(),
-                    'recognition_level' => $faker->randomElement(['College', 'University', 'Regional']),
-                ]);
-            }
-            
-            if ($events->isNotEmpty() && $faker->boolean(50)) {
-                $eventCount = min(2, $events->count());
-                $student->participatingEvents()->attach(
-                    $events->random(rand(1, $eventCount))->pluck('event_id')->toArray(), 
-                    ['role' => $faker->randomElement(['Participant', 'Volunteer', 'Organizer'])]
-                );
-            }
-
-            // 8. Violations
-            if ($faker->boolean(8)) {
-                Violation::create([
-                    'student_id' => $student->student_id,
-                    'violation_type' => $faker->randomElement(['Unexcused Absence', 'Minor Misconduct', 'Dress Code Violation']),
-                    'severity_level' => 'Minor',
-                    'violation_date' => $faker->date(),
-                    'case_status' => 'Resolved',
-                ]);
-            }
-
-            // 9. Medical Records
+            // 7. Medical & Behavioral
             MedicalRecord::create([
                 'student_id' => $student->student_id,
                 'blood_type' => $faker->randomElement(['A+', 'B+', 'O+', 'AB+']),
-                'allergies' => $faker->randomElement(['None', 'Peanuts', 'Dust', 'Lactose', 'Seafood']),
-                'chronic_illness' => $faker->randomElement(['None', 'Asthma', 'Diabetes', 'Hypertension']),
-                'disability' => $faker->randomElement(['None', 'None', 'None', 'Visual Impairment']),
                 'emergency_name' => $faker->name,
                 'emergency_contact' => $faker->phoneNumber,
             ]);
 
-            // 10. Behavioral Profile
             BehavioralProfile::create([
                 'student_id' => $student->student_id,
                 'punctuality_rating' => round($faker->randomFloat(1, 3, 5)),
                 'personality_type' => $faker->randomElement(['Introvert', 'Extrovert', 'Ambivert']),
-                'behavioral_remarks' => $faker->sentence(),
             ]);
-
-            // 11. Organizations (Affiliations)
-            if ($orgs->isNotEmpty() && $faker->boolean(60)) {
-                $randomOrgs = $orgs->random(rand(1, 2));
-                foreach ($randomOrgs as $org) {
-                    $student->organizations()->attach($org->org_id, [
-                        'position' => $faker->randomElement(['Member', 'Officer', 'President', 'Secretary']),
-                        'years_active' => '2023-2024'
-                    ]);
-                }
-            }
 
             $this->command->getOutput()->progressAdvance();
         }
