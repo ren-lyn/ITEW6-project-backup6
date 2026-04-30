@@ -103,7 +103,36 @@ const Login = () => {
                                     {loading ? 'Logging in...' : 'Sign In'}
                                 </button>
                             </div>
-                            <div className="text-center mt-5 animate-slide-up delay-900">
+                            
+                            {/* Demo Accounts Section */}
+                            <div className="mt-5 pt-4 border-top animate-slide-up delay-900">
+                                <p className="small fw-bold text-secondary text-uppercase mb-3">Demo Accounts (Click to auto-fill)</p>
+                                <div className="row g-2">
+                                    {[
+                                        { label: 'Admin', email: 'admin@ccs.edu' },
+                                        { label: 'Dean', email: 'dean@ccs.edu' },
+                                        { label: 'Faculty', email: 'turing@faculty.edu' },
+                                        { label: 'Student', email: 'john@student.edu' }
+                                    ].map((acc) => (
+                                        <div key={acc.label} className="col-6">
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary btn-sm w-100 text-start px-3 py-2 border-0 bg-light"
+                                                onClick={() => setCredentials({ email: acc.email, password: 'password' })}
+                                                style={{ fontSize: '0.75rem' }}
+                                            >
+                                                <div className="fw-bold text-dark">{acc.label}</div>
+                                                <div className="text-muted text-truncate">{acc.email}</div>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="text-center mt-3">
+                                    <span className="badge bg-light text-dark fw-normal border">Password: <span className="fw-bold">password</span></span>
+                                </div>
+                            </div>
+
+                            <div className="text-center mt-4 animate-slide-up delay-900">
                                 <p className="small text-muted mb-0">Forgot your password? <a href="#" style={{ color: '#F26A21' }} className="text-decoration-none fw-bold">Contact IT Support</a></p>
                             </div>
                         </form>
