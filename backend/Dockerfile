@@ -44,5 +44,5 @@ RUN composer install --no-dev --optimize-autoloader
 # Expose port 80
 EXPOSE 80
 
-# Start script
-CMD php artisan migrate --seed --force && apache2-foreground
+# Start script: Run migrations, start seeding in background, then start Apache
+CMD php artisan migrate --force && (php artisan db:seed --force &) && apache2-foreground
