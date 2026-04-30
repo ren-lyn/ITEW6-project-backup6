@@ -69,7 +69,7 @@ class AuthController extends Controller
             'password' => 'required|string'
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', strtolower($credentials['email']))->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['message' => 'Invalid login details'], 401);

@@ -93,11 +93,17 @@ class StudentSeeder extends Seeder
         foreach ($students as $data) {
             $userData = $data['user'];
             $userData['must_change_password'] = false;
-            $user = User::create($userData);
+            $user = User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
 
             $studentData = $data['student'];
             $studentData['user_id'] = $user->id;
-            $student = Student::create($studentData);
+            $student = Student::updateOrCreate(
+                ['email' => $studentData['email']],
+                $studentData
+            );
 
             if (isset($data['guardian'])) {
                 $student->guardians()->create($data['guardian']);

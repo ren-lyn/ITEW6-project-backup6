@@ -13,11 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Skip seeding if data already exists
-        if (User::where('email', 'admin@ccs.edu')->exists()) {
-            return;
-        }
-
+        // Ensure core administrative accounts exist with correct credentials
         User::updateOrCreate(
             ['email' => 'admin@ccs.edu'],
             [

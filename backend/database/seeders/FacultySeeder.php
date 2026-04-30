@@ -10,26 +10,30 @@ class FacultySeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::create([
-            'name' => 'Dr. Alan Turing',
-            'email' => 'turing@faculty.edu',
-            'password' => Hash::make('password'),
-            'role' => 'faculty',
-            'status' => 'approved',
-            'must_change_password' => false,
-        ]);
+        $user = User::updateOrCreate(
+            ['email' => 'turing@faculty.edu'],
+            [
+                'name' => 'Dr. Alan Turing',
+                'password' => Hash::make('password'),
+                'role' => 'faculty',
+                'status' => 'approved',
+                'must_change_password' => false,
+            ]
+        );
 
-        Faculty::create([
-            'user_id' => $user->id,
-            'id_number' => 'EMP-101',
-            'first_name' => 'Alan',
-            'last_name' => 'Turing',
-            'gender' => 'Male',
-            'department' => 'CS Department',
-            'rank' => 'Professor',
-            'employment_status' => 'Full-time',
-            'email' => 'turing@faculty.edu',
-            'date_hired' => '2015-06-01',
-        ]);
+        Faculty::updateOrCreate(
+            ['email' => 'turing@faculty.edu'],
+            [
+                'user_id' => $user->id,
+                'id_number' => 'EMP-101',
+                'first_name' => 'Alan',
+                'last_name' => 'Turing',
+                'gender' => 'Male',
+                'department' => 'CS Department',
+                'rank' => 'Professor',
+                'employment_status' => 'Full-time',
+                'date_hired' => '2015-06-01',
+            ]
+        );
     }
 }
