@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-export const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
-console.log('API Base URL:', BASE_URL);
+export const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') 
+    || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://itew6-project-backup6.onrender.com');
+
+console.log('API Base URL Detected:', BASE_URL);
+
 export const STORAGE_URL = `${BASE_URL}/storage`;
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseURL: import.meta.env.VITE_API_URL || `${BASE_URL}/api`,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
