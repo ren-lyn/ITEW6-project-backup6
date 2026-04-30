@@ -63,29 +63,35 @@ class ScheduleSeeder extends Seeder
 
         foreach ($curriculums as $curr) {
             foreach ($curr['classes'] as $subject) {
-                Schedule::create([
-                    'faculty_id' => $faculty ? $faculty->faculty_id : null,
-                    'title' => $subject['title'],
-                    'subject_code' => $subject['code'],
-                    'days_of_week' => $subject['days'],
-                    'start_time' => $subject['start'],
-                    'end_time' => $subject['end'],
-                    'room_assignment' => $subject['room'],
-                    'section' => $curr['section'],
-                    'year_level' => $subject['year'],
-                    'schedule_type' => 'Class'
-                ]);
+                Schedule::updateOrCreate(
+                    [
+                        'subject_code' => $subject['code'],
+                        'section' => $curr['section'],
+                        'days_of_week' => $subject['days'],
+                        'start_time' => $subject['start']
+                    ],
+                    [
+                        'faculty_id' => $faculty ? $faculty->faculty_id : null,
+                        'title' => $subject['title'],
+                        'end_time' => $subject['end'],
+                        'room_assignment' => $subject['room'],
+                        'year_level' => $subject['year'],
+                        'schedule_type' => 'Class'
+                    ]
+                );
             }
         }
 
-        Schedule::create([
-            'event_id' => $event ? $event->event_id : null,
-            'title' => $event ? $event->event_name : 'Search for Mr. and Ms. CCS',
-            'room_assignment' => 'University Gym',
-            'days_of_week' => 'Sunday',
-            'start_time' => '13:00:00',
-            'end_time' => '17:00:00',
-            'schedule_type' => 'Event'
-        ]);
+        Schedule::updateOrCreate(
+            ['title' => $event ? $event->event_name : 'Search for Mr. and Ms. CCS'],
+            [
+                'event_id' => $event ? $event->event_id : null,
+                'room_assignment' => 'University Gym',
+                'days_of_week' => 'Sunday',
+                'start_time' => '13:00:00',
+                'end_time' => '17:00:00',
+                'schedule_type' => 'Event'
+            ]
+        );
     }
 }
