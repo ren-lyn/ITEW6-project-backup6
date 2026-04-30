@@ -21,6 +21,7 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'https://itew6-project-frontend.onrender.com',
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:5175'
