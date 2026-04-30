@@ -26,6 +26,11 @@ class LargeStudentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Safety check: Skip if we already have a large number of seeded students
+        if (User::where('email', 'like', '%@ccs.edu')->where('role', 'student')->count() >= 1000) {
+            return;
+        }
+
         $faker = Faker::create();
         $skills = Skill::all();
         $talents = Talent::all();
@@ -199,7 +204,7 @@ class LargeStudentSeeder extends Seeder
             // 10. Behavioral Profile
             BehavioralProfile::create([
                 'student_id' => $student->student_id,
-                'punctuality_rating' => $faker->randomFloat(1, 3, 5),
+                'punctuality_rating' => round($faker->randomFloat(1, 3, 5)),
                 'personality_type' => $faker->randomElement(['Introvert', 'Extrovert', 'Ambivert']),
                 'behavioral_remarks' => $faker->sentence(),
             ]);

@@ -50,7 +50,7 @@ class ComprehensiveProfilingSeeder extends Seeder
                 ['student_id' => $student->student_id],
                 [
 
-                    'punctuality_rating' => $faker->randomFloat(1, 1, 5),
+                    'punctuality_rating' => round($faker->randomFloat(1, 1, 5)),
                     'personality_type' => $faker->randomElement(['Introvert', 'Extrovert', 'Ambivert']),
                     'behavioral_remarks' => $faker->sentence(),
                 ]
