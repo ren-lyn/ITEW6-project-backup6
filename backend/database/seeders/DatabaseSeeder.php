@@ -14,27 +14,37 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Ensure core administrative accounts exist with correct credentials
-        User::updateOrCreate(
-            ['email' => 'admin@ccs.edu'],
-            [
-                'name' => 'CCS Admin',
-                'password' => Hash::make('password'),
-                'role' => 'admin',
-                'status' => 'approved',
-                'must_change_password' => false,
-            ]
-        );
+        // Force delete existing admins to ensure a clean state
+        User::whereIn('email', ['admin@ccs.edu', 'dean@ccs.edu', 'admin@example.com'])->forceDelete();
 
-        User::updateOrCreate(
-            ['email' => 'dean@ccs.edu'],
-            [
-                'name' => 'CCS Dean',
-                'password' => Hash::make('password'),
-                'role' => 'dean',
-                'status' => 'approved',
-                'must_change_password' => false,
-            ]
-        );
+        // Ensure core administrative accounts exist with correct credentials
+        User::create([
+            'name' => 'CCS Admin',
+            'email' => 'admin@ccs.edu',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'status' => 'approved',
+            'must_change_password' => false,
+        ]);
+
+        User::create([
+            'name' => 'CCS Dean',
+            'email' => 'dean@ccs.edu',
+            'password' => Hash::make('password'),
+            'role' => 'dean',
+            'status' => 'approved',
+            'must_change_password' => false,
+        ]);
+
+        // Secondary fallback admin
+        User::create([
+            'name' => 'System Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'status' => 'approved',
+            'must_change_password' => false,
+        ]);
 
         $this->command->getOutput()->info('Admin and Dean accounts verified.');
 
