@@ -26,10 +26,9 @@ class LargeStudentSeeder extends Seeder
      */
     public function run(): void
     {
-        // Safety check: Skip if we already have a large number of seeded students
-        if (User::where('email', 'like', '%@ccs.edu')->where('role', 'student')->count() >= 1000) {
-            return;
-        }
+        // For a clean demo state, we clear existing demo students first.
+        // This prevents unique constraint violations from previous partial/failed runs.
+        User::where('email', 'like', '%@ccs.edu')->where('role', 'student')->forceDelete();
 
         $faker = Faker::create();
         $skills = Skill::all();
@@ -91,7 +90,7 @@ class LargeStudentSeeder extends Seeder
                 'permanent_address' => $faker->address,
                 'profile_submitted' => true,
                 'profile_submitted_at' => now(),
-                'id_number' => '202' . $faker->numberBetween(2, 6) . '-' . sprintf('%04d', $i + 1),
+                'id_number' => (2022 + ($i % 5)) . '-' . sprintf('%04d', $i + 1),
             ]);
 
             // 3. Create Guardian
