@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        $this->command->getOutput()->info('Admin and Dean accounts verified.');
+
         $this->call([
             FacultySeeder::class,
             StudentSeeder::class,

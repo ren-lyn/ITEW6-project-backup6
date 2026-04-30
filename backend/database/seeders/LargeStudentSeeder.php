@@ -45,9 +45,9 @@ class LargeStudentSeeder extends Seeder
         // Use a transaction for speed and integrity if possible, 
         // but for 1000 records with many relations, we'll just loop.
         
-        $this->command->getOutput()->progressStart(1000);
+        $this->command->getOutput()->progressStart(500);
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 500; $i++) {
             // Generate deterministic email for this index
             // We use a fixed first/last name pattern for the index to ensure consistency across runs
             $email = "student.demo.{$i}@ccs.edu";
