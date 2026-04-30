@@ -26,10 +26,6 @@ class LargeStudentSeeder extends Seeder
      */
     public function run(): void
     {
-        // For a clean demo state, we clear existing demo students first.
-        // This prevents unique constraint violations from previous partial/failed runs.
-        User::where('email', 'like', '%@ccs.edu')->where('role', 'student')->forceDelete();
-
         $faker = Faker::create();
         $skills = Skill::all();
         $talents = Talent::all();
@@ -45,9 +41,9 @@ class LargeStudentSeeder extends Seeder
         // Use a transaction for speed and integrity if possible, 
         // but for 1000 records with many relations, we'll just loop.
         
-        $this->command->getOutput()->progressStart(500);
+        $this->command->getOutput()->progressStart(1000);
 
-        for ($i = 0; $i < 500; $i++) {
+        for ($i = 0; $i < 1000; $i++) {
             // Generate deterministic email for this index
             // We use a fixed first/last name pattern for the index to ensure consistency across runs
             $email = "student.demo.{$i}@ccs.edu";
