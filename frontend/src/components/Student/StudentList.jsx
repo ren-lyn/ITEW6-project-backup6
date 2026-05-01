@@ -20,6 +20,19 @@ const StudentList = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalStudents, setTotalStudents] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (mobile) setViewMode('card');
+        };
+        window.addEventListener('resize', handleResize);
+        // Initial check
+        if (window.innerWidth < 768) setViewMode('card');
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [allSkills, setAllSkills] = useState([]);
     const [allTalents, setAllTalents] = useState([]);
@@ -521,22 +534,24 @@ const StudentList = () => {
                         </div>
 
                         <div className="d-flex gap-2 align-items-center">
-                            <div className="btn-group shadow-sm rounded-pill overflow-hidden me-2" style={{ border: '1px solid #dee2e6' }}>
-                                <button
-                                    className={`btn btn-sm ${viewMode === 'table' ? 'btn-dark' : 'btn-light border-0'}`}
-                                    onClick={() => setViewMode('table')}
-                                    title="Table View"
-                                >
-                                    <i className="bi bi-table"></i>
-                                </button>
-                                <button
-                                    className={`btn btn-sm ${viewMode === 'card' ? 'btn-dark' : 'btn-light border-0'}`}
-                                    onClick={() => setViewMode('card')}
-                                    title="Card View"
-                                >
-                                    <i className="bi bi-grid-3x3-gap"></i>
-                                </button>
-                            </div>
+                            {!isMobile && (
+                                <div className="btn-group shadow-sm rounded-pill overflow-hidden me-2" style={{ border: '1px solid #dee2e6' }}>
+                                    <button
+                                        className={`btn btn-sm ${viewMode === 'table' ? 'btn-dark' : 'btn-light border-0'}`}
+                                        onClick={() => setViewMode('table')}
+                                        title="Table View"
+                                    >
+                                        <i className="bi bi-table"></i>
+                                    </button>
+                                    <button
+                                        className={`btn btn-sm ${viewMode === 'card' ? 'btn-dark' : 'btn-light border-0'}`}
+                                        onClick={() => setViewMode('card')}
+                                        title="Card View"
+                                    >
+                                        <i className="bi bi-grid-3x3-gap"></i>
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="dropdown">
                                 <button className="btn btn-outline-dark btn-sm rounded-pill fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" disabled={exportLoading || totalStudents === 0}>
@@ -702,39 +717,27 @@ const StudentList = () => {
 
                             {/* Pagination Controls */}
                             {totalPages > 1 && (
-                                <div className="d-flex justify-content-between align-items-center p-3 bg-white rounded-4 shadow-sm border border-light mt-4">
-                                    <div className="small text-muted">
-                                        Showing <span className="fw-bold">{(currentPage - 1) * 24 + 1}</span> to <span className="fw-bold">{Math.min(currentPage * 24, totalStudents)}</span> of <span className="fw-bold">{totalStudents}</span> students
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 p-md-4 bg-white rounded-4 shadow-sm border border-light mt-4 gap-3">
+                                    <div className="small text-muted fw-medium order-2 order-md-1">
+                                        Showing <span className="text-dark fw-bold">{(currentPage - 1) * 24 + 1}</span> to <span className="text-dark fw-bold">{Math.min(currentPage * 24, totalStudents)}</span> of <span className="text-dark fw-bold">{totalStudents}</span> records
                                     </div>
-                                    <nav aria-label="Page navigation">
+                                    <nav aria-label="Page navigation" className="order-1 order-md-2">
                                         <ul className="pagination pagination-sm mb-0 gap-1">
                                             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                                <button className="page-link rounded-circle border-0 shadow-none" onClick={() => handlePageChange(currentPage - 1)}>
-                                                    <i className="bi bi-chevron-left"></i>
+                                                <button className="page-link rounded-3 border shadow-none px-3" onClick={() => handlePageChange(currentPage - 1)}>
+                                                    <i className="bi bi-chevron-left me-1"></i> Prev
                                                 </button>
                                             </li>
-                                            {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                                                let pageNum = currentPage;
-                                                if (currentPage <= 3) pageNum = i + 1;
-                                                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                                                else pageNum = currentPage - 2 + i;
+                                            
+                                            <li className="page-item d-none d-sm-inline-block">
+                                                <span className="page-link border-0 text-dark fw-bold bg-transparent px-3">
+                                                    Page {currentPage} of {totalPages}
+                                                </span>
+                                            </li>
 
-                                                if (pageNum < 1 || pageNum > totalPages) return null;
-
-                                                return (
-                                                    <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-                                                        <button
-                                                            className={`page-link rounded-circle border-0 shadow-none px-3 ${currentPage === pageNum ? 'bg-primary text-white' : 'bg-light text-dark'}`}
-                                                            onClick={() => handlePageChange(pageNum)}
-                                                        >
-                                                            {pageNum}
-                                                        </button>
-                                                    </li>
-                                                );
-                                            })}
                                             <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                                <button className="page-link rounded-circle border-0 shadow-none" onClick={() => handlePageChange(currentPage + 1)}>
-                                                    <i className="bi bi-chevron-right"></i>
+                                                <button className="page-link rounded-3 border shadow-none px-3" onClick={() => handlePageChange(currentPage + 1)}>
+                                                    Next <i className="bi bi-chevron-right ms-1"></i>
                                                 </button>
                                             </li>
                                         </ul>

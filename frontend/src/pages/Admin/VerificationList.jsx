@@ -7,11 +7,17 @@ const VerificationList = () => {
     const [actionLoading, setActionLoading] = useState(null);
     const [rejectModalData, setRejectModalData] = useState(null);
     const [remarks, setRemarks] = useState('');
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const fetchVerifications = async () => {
         try {
             const response = await api.get('/admin/verifications');
-            // Backend now returns { verifications: [...] }
             setVerifications(response.data.verifications || []);
         } catch (error) {
             console.error('Error fetching verifications:', error);
@@ -78,97 +84,159 @@ const VerificationList = () => {
                 </div>
             </div>
 
-            <div className="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
-                <div className="table-responsive">
-                    <table className="table table-hover align-middle mb-0">
-                        <thead className="bg-light">
-                            <tr>
-                                <th className="px-4 py-3 text-muted small text-uppercase fw-bold border-bottom-0">Source</th>
-                                <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0">Name</th>
-                                <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-center">Role</th>
-                                <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0">Verification Type</th>
-                                <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-center">Date</th>
-                                <th className="px-4 py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {verifications.map(item => (
-                                <tr key={item.id}>
-                                    <td className="px-4 py-3">
-                                        <div className="d-flex align-items-center justify-content-center bg-light rounded-circle" style={{ width: '32px', height: '32px' }}>
+            {isMobile ? (
+                <div className="row g-3">
+                    {verifications.map(item => (
+                        <div className="col-12" key={item.id}>
+                            <div className="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                    <div className="d-flex align-items-center">
+                                        <div className="bg-light rounded-circle p-2 me-2">
                                             {item.type === 'account' ? '👤' : '📄'}
                                         </div>
-                                    </td>
-                                    <td className="py-3">
                                         <div>
                                             <h6 className="mb-0 fw-bold">{item.user.name}</h6>
-                                            <small className="text-muted">UID: {item.user.id}</small>
+                                            <small className="text-muted text-uppercase fw-bold ls-tight" style={{ fontSize: '0.65rem' }}>{item.user.role}</small>
                                         </div>
-                                    </td>
-                                    <td className="py-3 text-center">
-                                        <span className={`badge ${item.user.role === 'faculty' ? 'bg-info text-dark' : 'bg-primary'} rounded-pill text-capitalize`}>
-                                            {item.user.role}
-                                        </span>
-                                    </td>
-                                    <td className="py-3">
-                                        <div className="d-flex align-items-center">
-                                            <div>
-                                                <h6 className="mb-0 small fw-bold">{item.document_type}</h6>
-                                                {item.file_path ? (
-                                                    <a 
-                                                        href={`${STORAGE_URL}/${item.file_path}`} 
-                                                        target="_blank" 
-                                                        rel="noreferrer" 
-                                                        className="small text-decoration-none"
-                                                    >
-                                                        View Document
-                                                    </a>
-                                                ) : (
-                                                    <span className="small text-muted italic">Profile Verification</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 text-center text-muted small">
-                                        {new Date(item.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-4 py-3 text-end">
-                                        <div className="d-flex gap-2 justify-content-end">
-                                            <button
-                                                className="btn btn-sm btn-success rounded-pill px-3"
-                                                onClick={() => handleApprove(item.id)}
-                                                disabled={actionLoading === item.id}
-                                            >
-                                                Approve
-                                            </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                onClick={() => setRejectModalData(item)}
-                                                disabled={actionLoading === item.id}
-                                            >
-                                                Reject
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {verifications.length === 0 && (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-5 text-muted">
-                                        <i className="bi bi-check2-circle fs-1 d-block mb-3 text-success opacity-50"></i>
-                                        <h5 className="fw-bold">No pending approvals</h5>
-                                        <p className="mb-0">Everything is up to date.</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                    </div>
+                                    <span className="small text-muted">{new Date(item.created_at).toLocaleDateString()}</span>
+                                </div>
+                                
+                                <div className="bg-light bg-opacity-50 rounded-3 p-3 mb-3 border border-white">
+                                    <h6 className="mb-1 small fw-bold text-dark">{item.document_type}</h6>
+                                    {item.file_path ? (
+                                        <a 
+                                            href={`${STORAGE_URL}/${item.file_path}`} 
+                                            target="_blank" 
+                                            rel="noreferrer" 
+                                            className="small text-decoration-none fw-bold"
+                                        >
+                                            <i className="bi bi-eye me-1"></i>View Document
+                                        </a>
+                                    ) : (
+                                        <span className="small text-muted italic">Profile Verification</span>
+                                    )}
+                                </div>
+
+                                <div className="d-flex gap-2">
+                                    <button
+                                        className="btn btn-success rounded-pill px-4 flex-grow-1 fw-bold shadow-sm"
+                                        onClick={() => handleApprove(item.id)}
+                                        disabled={actionLoading === item.id}
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-danger rounded-pill px-4 flex-grow-1 fw-bold"
+                                        onClick={() => setRejectModalData(item)}
+                                        disabled={actionLoading === item.id}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {verifications.length === 0 && (
+                        <div className="col-12 text-center py-5 text-muted bg-white rounded-4 shadow-sm">
+                            <i className="bi bi-check2-circle fs-1 d-block mb-2 text-success opacity-50"></i>
+                            <h6 className="fw-bold">No pending approvals</h6>
+                        </div>
+                    )}
                 </div>
-            </div>
+            ) : (
+                <div className="card shadow-sm border-0 rounded-4 overflow-hidden bg-white">
+                    <div className="table-responsive">
+                        <table className="table table-hover align-middle mb-0">
+                            <thead className="bg-light">
+                                <tr>
+                                    <th className="px-4 py-3 text-muted small text-uppercase fw-bold border-bottom-0">Source</th>
+                                    <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0">Name</th>
+                                    <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-center">Role</th>
+                                    <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0">Verification Type</th>
+                                    <th className="py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-center">Date</th>
+                                    <th className="px-4 py-3 text-muted small text-uppercase fw-bold border-bottom-0 text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {verifications.map(item => (
+                                    <tr key={item.id}>
+                                        <td className="px-4 py-3">
+                                            <div className="d-flex align-items-center justify-content-center bg-light rounded-circle" style={{ width: '32px', height: '32px' }}>
+                                                {item.type === 'account' ? '👤' : '📄'}
+                                            </div>
+                                        </td>
+                                        <td className="py-3">
+                                            <div>
+                                                <h6 className="mb-0 fw-bold">{item.user.name}</h6>
+                                                <small className="text-muted">UID: {item.user.id}</small>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 text-center">
+                                            <span className={`badge ${item.user.role === 'faculty' ? 'bg-info text-dark' : 'bg-primary'} rounded-pill text-capitalize`}>
+                                                {item.user.role}
+                                            </span>
+                                        </td>
+                                        <td className="py-3">
+                                            <div className="d-flex align-items-center">
+                                                <div>
+                                                    <h6 className="mb-0 small fw-bold">{item.document_type}</h6>
+                                                    {item.file_path ? (
+                                                        <a 
+                                                            href={`${STORAGE_URL}/${item.file_path}`} 
+                                                            target="_blank" 
+                                                            rel="noreferrer" 
+                                                            className="small text-decoration-none"
+                                                        >
+                                                            View Document
+                                                        </a>
+                                                    ) : (
+                                                        <span className="small text-muted italic">Profile Verification</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 text-center text-muted small">
+                                            {new Date(item.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-end">
+                                            <div className="d-flex gap-2 justify-content-end">
+                                                <button
+                                                    className="btn btn-sm btn-success rounded-pill px-3"
+                                                    onClick={() => handleApprove(item.id)}
+                                                    disabled={actionLoading === item.id}
+                                                >
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                    onClick={() => setRejectModalData(item)}
+                                                    disabled={actionLoading === item.id}
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {verifications.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" className="text-center py-5 text-muted">
+                                            <i className="bi bi-check2-circle fs-1 d-block mb-3 text-success opacity-50"></i>
+                                            <h5 className="fw-bold">No pending approvals</h5>
+                                            <p className="mb-0">Everything is up to date.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Reject Modal */}
             {rejectModalData && (
-                <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1">
+                <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" style={{ zIndex: 2050 }}>
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content rounded-4 border-0 shadow">
                             <form onSubmit={handleRejectSubmit}>

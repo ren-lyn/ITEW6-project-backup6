@@ -14,6 +14,15 @@ const FacultyList = () => {
     const [selectedFacultyId, setSelectedFacultyId] = useState(null);
     const [totalFaculties, setTotalFaculties] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const availableSkills = ['Web Development', 'Machine Learning', 'Data Science', 'Database Management', 'Networking', 'Cybersecurity', 'Software Engineering'];
 
@@ -24,7 +33,7 @@ const FacultyList = () => {
         skills: []
     });
 
-    const fetchFaculties = async () => {
+    const fetchFaculties = async (page = 1) => {
         setLoading(true);
         try {
             let params = new URLSearchParams();
@@ -35,10 +44,13 @@ const FacultyList = () => {
                     params.append(key, value);
                 }
             });
+            params.append('page', page);
 
             const response = await api.get(`/faculties?${params.toString()}`);
             const data = response.data.data || response.data;
             setFaculties(Array.isArray(data) ? data : []);
+            setTotalPages(response.data.last_page || 1);
+            setCurrentPage(response.data.current_page || 1);
             setTotalFaculties(response.data.total || (Array.isArray(data) ? data.length : 0));
         } catch (error) {
             console.error('Error fetching faculties:', error);
@@ -48,8 +60,15 @@ const FacultyList = () => {
     };
 
     useEffect(() => {
-        fetchFaculties();
+        fetchFaculties(1);
     }, []);
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            fetchFaculties(newPage);
+            window.scrollTo(0, 0);
+        }
+    };
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -269,7 +288,7 @@ const FacultyList = () => {
 
     return (
         <div className="animate-slide-up">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h2 className="display-6 fw-bold mb-1" style={{ color: '#198754' }}>Faculty Lists</h2>
                     <p className="text-muted mb-0">Advanced faculty directory and comprehensive queries</p>
@@ -445,6 +464,36 @@ const FacultyList = () => {
                                     <p className="text-muted fs-5">No faculty members found matching your criteria.</p>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 p-md-4 bg-white rounded-4 shadow-sm border border-light mt-4 gap-3">
+                            <div className="small text-muted fw-medium order-2 order-md-1">
+                                Showing <span className="text-dark fw-bold">{(currentPage - 1) * 24 + 1}</span> to <span className="text-dark fw-bold">{Math.min(currentPage * 24, totalFaculties)}</span> of <span className="text-dark fw-bold">{totalFaculties}</span> records
+                            </div>
+                            <nav aria-label="Page navigation" className="order-1 order-md-2">
+                                <ul className="pagination pagination-sm mb-0 gap-1">
+                                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                        <button className="page-link rounded-3 border shadow-none px-3" onClick={() => handlePageChange(currentPage - 1)}>
+                                            <i className="bi bi-chevron-left me-1"></i> Prev
+                                        </button>
+                                    </li>
+                                    
+                                    <li className="page-item d-none d-sm-inline-block">
+                                        <span className="page-link border-0 text-dark fw-bold bg-transparent px-3">
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+                                    </li>
+
+                                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                        <button className="page-link rounded-3 border shadow-none px-3" onClick={() => handlePageChange(currentPage + 1)}>
+                                            Next <i className="bi bi-chevron-right ms-1"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     )}
                 </div>
