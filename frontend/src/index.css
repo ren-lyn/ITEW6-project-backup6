@@ -15,9 +15,15 @@ body {
 }
 
 .sidebar {
-  min-height: calc(100vh - 60px);
+  position: fixed;
+  top: 78px;
+  left: 0;
+  width: 25%;
+  height: calc(100vh - 78px);
   background-color: var(--ccs-bg-dark);
   border-right: none;
+  z-index: 1030;
+  overflow-y: auto;
 }
 
 .nav-link {
@@ -184,7 +190,7 @@ body {
     position: fixed !important;
     top: 0 !important;
     left: -280px; /* Start hidden */
-    width: 280px;
+    width: 280px !important;
     height: 100vh !important;
     z-index: 2000 !important;
     transition: left 0.3s ease;
@@ -202,4 +208,10 @@ body {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
-}
+}
+
+@media (min-width: 768px) {
+  main {
+    margin-left: 25% !important;
+  }
+}

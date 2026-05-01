@@ -107,7 +107,11 @@ const Layout = ({ children }) => {
 
     return (
         <div className="d-flex flex-column min-vh-100 overflow-x-hidden">
-            <nav className="navbar navbar-dark sticky-top px-3 px-md-4 py-3 shadow-sm" style={{ background: 'linear-gradient(135deg, #F26A21 0%, #c14d0f 100%)', borderBottom: '3px solid #a33f08', zIndex: 1040 }}>
+            <div 
+                className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
+                onClick={() => setIsSidebarOpen(false)}
+            ></div>
+            <nav className="navbar navbar-dark fixed-top px-3 px-md-4 py-3 shadow-sm d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, #F26A21 0%, #c14d0f 100%)', borderBottom: '3px solid #a33f08', zIndex: 1040 }}>
                 <div className="d-flex align-items-center">
                     <button 
                         className="btn btn-link text-white d-md-none me-2 p-0 shadow-none" 
@@ -133,13 +137,9 @@ const Layout = ({ children }) => {
                     </button>
                 </div>
             </nav>
-            <div className="container-fluid flex-grow-1">
+            <div className="container-fluid flex-grow-1" style={{ marginTop: '78px' }}>
                 <div className="row flex-nowrap h-100">
-                    <div 
-                        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
-                        onClick={() => setIsSidebarOpen(false)}
-                    ></div>
-                    <nav className={`col-md-3 d-none d-md-block sidebar py-4 sticky-top shadow-sm ${isSidebarOpen ? 'show' : ''}`} style={{ backgroundColor: '#1a1a1a', top: '75px', height: 'calc(100vh - 75px)', zIndex: 1030, overflowY: 'auto' }}>
+                    <nav className={`d-none d-md-block sidebar py-4 shadow-sm ${isSidebarOpen ? 'show' : ''}`} style={{ zIndex: 1030, overflowY: 'auto' }}>
                         <div className="sidebar-sticky h-100 d-flex flex-column">
                             <div className="d-md-none px-4 mb-4 d-flex justify-content-between align-items-center">
                                 <span className="text-white fw-bold fs-5">Menu</span>
