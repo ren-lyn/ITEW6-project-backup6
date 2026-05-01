@@ -66,10 +66,10 @@ const VerificationList = () => {
 
     return (
         <div>
-            <div className="mb-4 d-flex justify-content-between align-items-center">
+            <div className="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
                     <h2 className="fw-bold mb-1">Verification Approvals</h2>
-                    <p className="text-secondary">Unified list of pending account registrations and document submissions.</p>
+                    <p className="text-secondary mb-0">Unified list of pending account registrations and document submissions.</p>
                 </div>
                 <div>
                     <span className="badge bg-warning text-dark fs-6 py-2 px-3 rounded-pill shadow-sm">

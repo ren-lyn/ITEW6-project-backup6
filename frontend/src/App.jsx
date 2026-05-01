@@ -35,10 +35,20 @@ const Layout = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const [openMenus, setOpenMenus] = React.useState({ 'Attendance': true });
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
     
     const toggleMenu = (name) => {
         setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
     };
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    // Close sidebar on route change (mobile)
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [location.pathname]);
 
     const userJson = localStorage.getItem('user');
     let user = null;
@@ -96,9 +106,17 @@ const Layout = ({ children }) => {
     }
 
     return (
-        <div className="d-flex flex-column min-vh-100">
-            <nav className="navbar navbar-dark sticky-top px-4 py-3 shadow-sm" style={{ background: 'linear-gradient(135deg, #F26A21 0%, #c14d0f 100%)', borderBottom: '3px solid #a33f08', zIndex: 1040 }}>
-                <Link className="navbar-brand fw-bold d-flex align-items-center" style={{ color: '#ffffff' }} to="/">
+        <div className="d-flex flex-column min-vh-100 overflow-x-hidden">
+            <nav className="navbar navbar-dark sticky-top px-3 px-md-4 py-3 shadow-sm" style={{ background: 'linear-gradient(135deg, #F26A21 0%, #c14d0f 100%)', borderBottom: '3px solid #a33f08', zIndex: 1040 }}>
+                <div className="d-flex align-items-center">
+                    <button 
+                        className="btn btn-link text-white d-md-none me-2 p-0 shadow-none" 
+                        onClick={toggleSidebar}
+                        aria-label="Toggle navigation"
+                    >
+                        <i className={`bi ${isSidebarOpen ? 'bi-x-lg' : 'bi-list'} fs-3`}></i>
+                    </button>
+                    <Link className="navbar-brand fw-bold d-flex align-items-center" style={{ color: '#ffffff' }} to="/">
                     <img src={ccsLogo} alt="CCS Logo" style={{
                         width: '45px',
                         height: '45px',
@@ -107,17 +125,28 @@ const Layout = ({ children }) => {
                         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                     }} />
                     <span className="fs-5 tracking-tight ms-2" style={{ color: '#ffffff', fontWeight: '800' }}>CCS<span style={{ color: '#ffe6d5' }}> PROFILER</span></span>
-                </Link>
+                    </Link>
+                </div>
                 <div className="d-flex align-items-center">
-                    <button className="btn btn-sm rounded-pill px-4 shadow-none fw-bold" onClick={handleLogout} style={{ border: '2px solid #ffffff', color: '#ffffff', backgroundColor: 'transparent' }} onMouseOver={(e) => { e.target.style.backgroundColor = '#ffffff'; e.target.style.color = '#F26A21'; }} onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ffffff'; }}>
+                    <button className="btn btn-sm rounded-pill px-3 px-md-4 shadow-none fw-bold" onClick={handleLogout} style={{ border: '2px solid #ffffff', color: '#ffffff', backgroundColor: 'transparent' }} onMouseOver={(e) => { e.target.style.backgroundColor = '#ffffff'; e.target.style.color = '#F26A21'; }} onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ffffff'; }}>
                         Logout
                     </button>
                 </div>
             </nav>
             <div className="container-fluid flex-grow-1">
                 <div className="row flex-nowrap h-100">
-                    <nav className="col-md-3 d-none d-md-block sidebar py-4 sticky-top shadow-sm" style={{ backgroundColor: '#1a1a1a', top: '75px', height: 'calc(100vh - 75px)', zIndex: 1030, overflowY: 'auto' }}>
+                    <div 
+                        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
+                        onClick={() => setIsSidebarOpen(false)}
+                    ></div>
+                    <nav className={`col-md-3 d-none d-md-block sidebar py-4 sticky-top shadow-sm ${isSidebarOpen ? 'show' : ''}`} style={{ backgroundColor: '#1a1a1a', top: '75px', height: 'calc(100vh - 75px)', zIndex: 1030, overflowY: 'auto' }}>
                         <div className="sidebar-sticky h-100 d-flex flex-column">
+                            <div className="d-md-none px-4 mb-4 d-flex justify-content-between align-items-center">
+                                <span className="text-white fw-bold fs-5">Menu</span>
+                                <button className="btn btn-link text-white p-0" onClick={() => setIsSidebarOpen(false)}>
+                                    <i className="bi bi-x-lg fs-4"></i>
+                                </button>
+                            </div>
                             {/* Top part of sidebar removed logo */}
                             <ul className="nav flex-column px-3 flex-grow-1 mt-2">
                                 {menuItems.map((item, index) => {
@@ -196,7 +225,7 @@ const Layout = ({ children }) => {
                             </div>
                         </div>
                     </nav>
-                    <main role="main" className="col-md-9 ms-sm-auto px-md-5 py-5 overflow-auto" style={{ backgroundColor: 'var(--ccs-bg-light)', minHeight: 'calc(100vh - 64px)' }}>
+                    <main role="main" className="col-md-9 px-md-5 py-5 overflow-auto" style={{ backgroundColor: 'var(--ccs-bg-light)', minHeight: 'calc(100vh - 64px)' }}>
                         {children}
                     </main>
                 </div>

@@ -96,12 +96,12 @@ const AdminReports = () => {
 
     return (
         <div>
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h2 className="fw-bold mb-1">Institutional Reports</h2>
-                    <p className="text-secondary">Generate and export structured summaries of university constituents.</p>
+                    <p className="text-secondary mb-0">Generate and export structured summaries of university constituents.</p>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-wrap gap-2">
                     <button onClick={handleExportCSV} className="btn btn-outline-success fw-bold rounded-pill px-4">
                         <i className="bi bi-file-earmark-excel me-2"></i>Export CSV
                     </button>
